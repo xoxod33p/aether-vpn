@@ -1,0 +1,84 @@
+name: Release Automation & Cross-Platform CI
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-tauri:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: 'windows-latest'
+            args: ''
+          - platform: 'ubuntu-22.04'
+            args: ''
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust Cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: Install Linux system dependencies
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libssl-dev
+
+      - name: Download sing-box core binary for platform
+        shell: pwsh
+        run: |
+          $binDir = "src-tauri/bin"
+          New-Item -ItemType Directory -Force -Path $binDir
+          if ($IsWindows) {
+            Invoke-WebRequest -Uri "https://github.com/SagerNet/sing-box/releases/download/v1.11.4/sing-box-1.11.4-windows-amd64.zip" -OutFile "$binDir/sing-box.zip"
+            Expand-Archive -Path "$binDir/sing-box.zip" -DestinationPath "$binDir/extracted"
+            Move-Item "$binDir/extracted/*/sing-box.exe" "$binDir/sing-box.exe"
+            Remove-Item -Recurse -Force "$binDir/sing-box.zip", "$binDir/extracted"
+          } else {
+            Invoke-WebRequest -Uri "https://github.com/SagerNet/sing-box/releases/download/v1.11.4/sing-box-1.11.4-linux-amd64.tar.gz" -OutFile "$binDir/sing-box.tar.gz"
+            tar -xzf "$binDir/sing-box.tar.gz" -C "$binDir"
+            mv $binDir/*/sing-box $binDir/sing-box
+            chmod +x $binDir/sing-box
+            rm -rf $binDir/sing-box.tar.gz $binDir/sing-box-*
+          }
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Run Backend Rust Test Suite
+        run: cargo test --manifest-path src-tauri/Cargo.toml
+
+      - name: Build Frontend Application
+        run: npm run build
+
+      - name: Build Tauri Application Bundle
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: v__VERSION__
+          releaseName: 'AetherVPN v__VERSION__'
+          releaseBody: 'Production release of AetherVPN modern cross-platform VPN client.'
+          releaseDraft: false
+          prerelease: false
+          args: ${{ matrix.args }}
