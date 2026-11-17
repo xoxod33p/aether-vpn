@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "build:installer": "tauri build",
-    "build:portable": "npm run build && cargo build --manifest-path src-tauri/Cargo.toml --release",
+    "build:installer": "tauri build && node scripts/update-installer.js",
+    "build:portable": "npm run build && cargo build --manifest-path src-tauri/Cargo.toml --release && node scripts/update-installer.js",
     "test:backend": "cargo test --lib --manifest-path src-tauri/Cargo.toml",
     "lint": "oxlint",
     "preview": "vite preview",

@@ -25,8 +25,8 @@ impl SystemProxyManager {
             port
         );
 
-        let output = std::process::Command::new("powershell")
-            .args(["-NoProfile", "-NonInteractive", "-Command", &ps_cmd])
+        let output = crate::core::silent_command("powershell")
+            .args(["-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-Command", &ps_cmd])
             .output()
             .map_err(|e| format!("Failed to set Windows proxy registry: {}", e))?;
 
@@ -54,8 +54,8 @@ impl SystemProxyManager {
             enabled, server
         );
 
-        let _ = std::process::Command::new("powershell")
-            .args(["-NoProfile", "-NonInteractive", "-Command", &ps_cmd])
+        let _ = crate::core::silent_command("powershell")
+            .args(["-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-Command", &ps_cmd])
             .output();
 
         info!("Windows system proxy disabled / restored.");
@@ -66,8 +66,8 @@ impl SystemProxyManager {
     fn get_windows_proxy_settings() -> Result<ProxyBackup, String> {
         let ps_cmd = r#"$p = Get-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings'; [PSCustomObject]@{Enabled=$p.ProxyEnable; Server=$p.ProxyServer; Override=$p.ProxyOverride} | ConvertTo-Json -Compress"#;
         
-        let output = std::process::Command::new("powershell")
-            .args(["-NoProfile", "-NonInteractive", "-Command", ps_cmd])
+        let output = crate::core::silent_command("powershell")
+            .args(["-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-Command", ps_cmd])
             .output()
             .map_err(|e| e.to_string())?;
 

@@ -8,6 +8,7 @@ use tracing::{info, warn};
 pub struct ProcessManager {
     child: Arc<Mutex<Option<Child>>>,
     config_path: Arc<parking_lot::Mutex<Option<PathBuf>>>,
+    last_error: Arc<parking_lot::Mutex<Option<String>>>,
 }
 
 impl ProcessManager {
@@ -15,6 +16,28 @@ impl ProcessManager {
         Self {
             child: Arc::new(Mutex::new(None)),
             config_path: Arc::new(parking_lot::Mutex::new(None)),
+            last_error: Arc::new(parking_lot::Mutex::new(None)),
+        }
+    }
+
+    pub fn get_last_error(&self) -> Option<String> {
+        self.last_error.lock().clone()
+    }
+
+    /// Kills any lingering sing-box processes on the system with zero console window popup
+    pub fn kill_orphans() {
+        #[cfg(windows)]
+        {
+            let _ = crate::core::silent_command("taskkill")
+                .args(["/F", "/IM", "sing-box.exe"])
+                .output();
+        }
+        #[cfg(not(windows))]
+        {
+            let _ = std::process::Command::new("pkill")
+                .arg("-9")
+                .arg("sing-box")
+                .output();
         }
     }
 
@@ -88,6 +111,12 @@ impl ProcessManager {
     pub async fn start(&self, config_json: serde_json::Value) -> Result<(), String> {
         self.stop().await?;
 
+        // Ensure any lingering orphan process from a previous crash/session is terminated
+        Self::kill_orphans();
+        tokio::time::sleep(tokio::time::Duration::from_millis(150)).await;
+
+        *self.last_error.lock() = None;
+
         let bin_path = Self::find_singbox_binary()?;
         info!("Using sing-box engine binary at: {:?}", bin_path);
 
@@ -104,6 +133,10 @@ impl ProcessManager {
         info!("Wrote sing-box active configuration to: {:?}", cfg_file);
 
         let mut cmd = Command::new(&bin_path);
+        if let Some(parent) = bin_path.parent() {
+            cmd.current_dir(parent);
+        }
+
         cmd.arg("run")
             .arg("-c")
             .arg(&cfg_file)
@@ -134,15 +167,27 @@ impl ProcessManager {
             });
         }
 
+        let last_err_sink = self.last_error.clone();
         if let Some(stderr) = stderr {
             tokio::spawn(async move {
                 let mut reader = BufReader::new(stderr).lines();
                 while let Ok(Some(line)) = reader.next_line().await {
                     let sanitized = sanitize_log_line(&line);
+                    if sanitized.contains("FATAL") || sanitized.contains("ERROR") || sanitized.contains("Access is denied") {
+                        *last_err_sink.lock() = Some(sanitized.clone());
+                    }
                     warn!(target: "sing-box", "{}", sanitized);
                     crate::core::append_log("warn", &sanitized, Some("sing-box"));
                 }
             });
+        }
+
+        // Validate that sing-box didn't exit immediately on startup
+        tokio::time::sleep(tokio::time::Duration::from_millis(350)).await;
+        if let Ok(Some(exit_status)) = child.try_wait() {
+            let detail = self.last_error.lock().clone()
+                .unwrap_or_else(|| format!("sing-box process exited immediately with status {}", exit_status));
+            return Err(format!("sing-box engine failed to start: {}", detail));
         }
 
         {
@@ -167,6 +212,9 @@ impl ProcessManager {
             let _ = child.wait().await;
             info!("sing-box engine process terminated.");
         }
+
+        // Clean any lingering orphans silently
+        Self::kill_orphans();
 
         let mut cfg_guard = self.config_path.lock();
         if let Some(path) = cfg_guard.take() {

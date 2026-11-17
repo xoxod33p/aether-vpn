@@ -46,13 +46,11 @@ impl KillSwitchManager {
 
     #[cfg(target_os = "windows")]
     fn enable_windows(vpn_server_ip: &str, vpn_port: u16) -> Result<(), String> {
-        use std::process::Command;
-
         // Clean any existing rules first for idempotency
         let _ = Self::disable_windows();
 
         // 1. Allow Loopback (127.0.0.1 and ::1)
-        let _ = Command::new("netsh")
+        let _ = crate::core::silent_command("netsh")
             .args([
                 "advfirewall", "firewall", "add", "rule",
                 "name=AetherVPN_KS_AllowLoopback",
@@ -63,7 +61,7 @@ impl KillSwitchManager {
             .output();
 
         // 2. Allow Local LAN Subnets
-        let _ = Command::new("netsh")
+        let _ = crate::core::silent_command("netsh")
             .args([
                 "advfirewall", "firewall", "add", "rule",
                 "name=AetherVPN_KS_AllowLAN",
@@ -75,7 +73,7 @@ impl KillSwitchManager {
 
         // 3. Allow Traffic to the VPN Endpoint itself
         let remote_port_arg = format!("{}", vpn_port);
-        let _ = Command::new("netsh")
+        let _ = crate::core::silent_command("netsh")
             .args([
                 "advfirewall", "firewall", "add", "rule",
                 "name=AetherVPN_KS_AllowVPN",
@@ -88,7 +86,7 @@ impl KillSwitchManager {
             .output();
 
         // 4. Block All other Outbound traffic
-        let output = Command::new("netsh")
+        let output = crate::core::silent_command("netsh")
             .args([
                 "advfirewall", "firewall", "add", "rule",
                 "name=AetherVPN_KS_BlockAll",
@@ -110,9 +108,7 @@ impl KillSwitchManager {
 
     #[cfg(target_os = "windows")]
     fn disable_windows() -> Result<(), String> {
-        use std::process::Command;
-
-        // Delete ONLY our explicitly created rules
+        // Delete ONLY our explicitly created rules silently
         let rules = [
             "AetherVPN_KS_BlockAll",
             "AetherVPN_KS_AllowVPN",
@@ -121,7 +117,7 @@ impl KillSwitchManager {
         ];
 
         for rule in rules {
-            let _ = Command::new("netsh")
+            let _ = crate::core::silent_command("netsh")
                 .args(["advfirewall", "firewall", "delete", "rule", &format!("name={}", rule)])
                 .output();
         }

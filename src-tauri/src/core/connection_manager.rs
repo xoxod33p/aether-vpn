@@ -114,8 +114,8 @@ impl ConnectionManager {
                     // Give Wintun driver 1.5 seconds to register the virtual adapter in Windows
                     tokio::time::sleep(tokio::time::Duration::from_millis(1500)).await;
                     let ps_cmd = "Disable-NetAdapterBinding -Name 'AetherTun' -ComponentID 'ms_tcpip6' -Confirm:$false -ErrorAction SilentlyContinue; Get-NetConnectionProfile -InterfaceAlias 'AetherTun' | Out-Null";
-                    let _ = std::process::Command::new("powershell")
-                        .args(["-NoProfile", "-NonInteractive", "-Command", ps_cmd])
+                    let _ = crate::core::silent_command("powershell")
+                        .args(["-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-Command", ps_cmd])
                         .output();
                     crate::core::append_log("info", "Configured AetherTun adapter bindings (IPv4 NCSI alignment)", Some("core::tun"));
                 });
@@ -198,11 +198,13 @@ impl ConnectionManager {
 
                 // Check process health
                 if !process_mgr_arc.is_running().await {
-                    warn!("sing-box engine exited unexpectedly!");
-                    crate::core::append_log("error", "sing-box engine exited unexpectedly", Some("core::engine"));
+                    let err_msg = process_mgr_arc.get_last_error()
+                        .unwrap_or_else(|| "sing-box engine exited unexpectedly".to_string());
+                    warn!("sing-box engine exited: {}", err_msg);
+                    crate::core::append_log("error", &format!("sing-box engine exited: {}", err_msg), Some("core::engine"));
                     let mut current = info_arc.write();
                     current.status = ConnectionStatus::Error;
-                    current.error_message = Some("sing-box process terminated unexpectedly".to_string());
+                    current.error_message = Some(err_msg);
                     break;
                 }
 

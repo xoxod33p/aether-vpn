@@ -110,17 +110,11 @@ if "%BUILD_MODE%"=="portable" (
     )
 
     if not exist "installer\" mkdir "installer"
-    taskkill /f /im aether-vpn-portable.exe >nul 2>nul
-    taskkill /f /im aether-vpn.exe >nul 2>nul
-    ping 127.0.0.1 -n 2 >nul
-    copy /y "src-tauri\target\release\aether-vpn.exe" "installer\aether-vpn-portable.exe" >nul
-    if exist "bin\sing-box.exe" (
-        copy /y "bin\sing-box.exe" "installer\sing-box.exe" >nul
-    )
+    call node scripts\update-installer.js
 
     echo.
     echo ======================================================================
-    echo [SUCCESS] Portable executable generated:
+    echo [SUCCESS] Portable executable generated in installer\ directory:
     echo     installer\aether-vpn-portable.exe
     echo     installer\sing-box.exe
     echo ======================================================================
@@ -137,18 +131,7 @@ if !ERRORLEVEL! neq 0 (
 
 :: Copy artifacts to installer/ directory
 if not exist "installer\" mkdir "installer"
-taskkill /f /im aether-vpn-portable.exe >nul 2>nul
-taskkill /f /im aether-vpn.exe >nul 2>nul
-ping 127.0.0.1 -n 2 >nul
-if exist "src-tauri\target\release\bundle\nsis\AetherVPN_0.1.0_x64-setup.exe" (
-    copy /y "src-tauri\target\release\bundle\nsis\AetherVPN_0.1.0_x64-setup.exe" "installer\AetherVPN_0.1.0_x64-setup.exe" >nul
-)
-if exist "src-tauri\target\release\aether-vpn.exe" (
-    copy /y "src-tauri\target\release\aether-vpn.exe" "installer\aether-vpn-portable.exe" >nul
-)
-if exist "bin\sing-box.exe" (
-    copy /y "bin\sing-box.exe" "installer\sing-box.exe" >nul
-)
+call node scripts\update-installer.js
 
 echo.
 echo ======================================================================
