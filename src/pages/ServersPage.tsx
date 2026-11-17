@@ -187,41 +187,41 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
   return (
     <div className="p-4 sm:p-5 max-w-5xl mx-auto space-y-4 select-none">
       {/* Action Bar */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap shrink-0">
           <button
             onClick={handleOpenAdd}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-medium text-xs hover:brightness-110 shadow-lg shadow-cyan-600/20 active:scale-95 transition-all"
+            className="h-9 px-4 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-600 hover:from-blue-600 hover:to-indigo-500 text-white font-medium text-xs whitespace-nowrap shadow-md shadow-blue-900/40 ring-1 ring-blue-400/30 active:scale-95 transition-all cursor-pointer shrink-0"
           >
-            <Plus className="w-4 h-4" />
-            <span>Add Server</span>
+            <Plus className="w-4 h-4 text-blue-100" />
+            <span className="whitespace-nowrap">Add Server</span>
           </button>
           <button
             onClick={() => setIsImportModalOpen(true)}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 font-medium text-xs hover:bg-slate-800 transition-all"
+            className="h-9 px-3.5 inline-flex items-center justify-center gap-2 rounded-xl bg-[#081329] hover:bg-[#0f2147] border border-[#1e3a8a]/60 text-blue-200 font-medium text-xs whitespace-nowrap transition-all cursor-pointer shrink-0"
           >
-            <Upload className="w-4 h-4" />
-            <span>Import</span>
+            <Upload className="w-3.5 h-3.5 text-blue-300" />
+            <span className="whitespace-nowrap">Import</span>
           </button>
           <button
             onClick={handlePingAll}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-cyan-400 font-medium text-xs hover:bg-slate-800 transition-all"
+            className="h-9 px-3.5 inline-flex items-center justify-center gap-2 rounded-xl bg-[#081329] hover:bg-[#0f2147] border border-[#1e3a8a]/60 text-blue-300 font-medium text-xs whitespace-nowrap transition-all cursor-pointer shrink-0"
           >
-            <Wifi className="w-4 h-4" />
-            <span>Test All Pings</span>
+            <Wifi className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="whitespace-nowrap">Test All Pings</span>
           </button>
         </div>
 
         {/* Search & Sort */}
-        <div className="flex items-center gap-3 w-full sm:w-auto">
+        <div className="flex items-center gap-2.5 w-full sm:w-auto">
           <div className="relative flex-1 sm:w-64">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+            <Search className="w-4 h-4 text-blue-400/60 absolute left-3 top-2.5" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search servers, IPs, protocols..."
-              className="w-full bg-slate-900/80 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+              className="h-9 w-full bg-[#081329]/80 border border-[#1e3a8a]/60 rounded-xl pl-9 pr-3 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500"
             />
           </div>
 
@@ -232,20 +232,20 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
               )
             }
             title={`Sort by: ${sortBy}`}
-            className="px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-400 hover:text-slate-200 text-xs flex items-center gap-1.5 font-medium"
+            className="h-9 px-3 bg-[#081329] hover:bg-[#0f2147] border border-[#1e3a8a]/60 rounded-xl text-blue-200 text-xs inline-flex items-center justify-center gap-1.5 font-medium whitespace-nowrap shrink-0 cursor-pointer"
           >
-            <ArrowUpDown className="w-3.5 h-3.5" />
+            <ArrowUpDown className="w-3.5 h-3.5 text-blue-400" />
             <span className="capitalize">{sortBy}</span>
           </button>
         </div>
       </div>
 
       {/* Filter Chips */}
-      <div className="flex items-center justify-between border-b border-slate-800/80 pb-3 text-xs">
+      <div className="flex items-center justify-between border-b border-[#152347] pb-3 text-xs">
         {/* Groups */}
         <div className="flex items-center gap-2 overflow-x-auto">
-          <span className="text-slate-500 font-medium mr-1 flex items-center gap-1">
-            <Layers className="w-3.5 h-3.5" /> Group:
+          <span className="text-slate-400 font-medium mr-1 flex items-center gap-1">
+            <Layers className="w-3.5 h-3.5 text-blue-400" /> Group:
           </span>
           {groups.map((grp) => (
             <button
@@ -253,8 +253,8 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
               onClick={() => setSelectedGroup(grp)}
               className={`px-3 py-1 rounded-lg font-medium transition-all ${
                 selectedGroup === grp
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
-                  : 'bg-slate-900/60 text-slate-400 border border-slate-800 hover:text-slate-200'
+                  ? 'bg-blue-600/20 text-blue-300 border border-blue-500/50'
+                  : 'bg-[#081329] text-slate-400 border border-[#172a59] hover:text-blue-200'
               }`}
             >
               {grp}
@@ -270,8 +270,8 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
               onClick={() => setSelectedProtocol(proto)}
               className={`px-2.5 py-0.5 rounded-md font-mono text-[11px] uppercase transition-all ${
                 selectedProtocol === proto
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
-                  : 'text-slate-500 hover:text-slate-300'
+                  ? 'bg-blue-600/20 text-blue-300 border border-blue-500/50'
+                  : 'text-slate-400 hover:text-blue-200'
               }`}
             >
               {proto}
@@ -282,8 +282,8 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
 
       {/* Server List Cards */}
       {filteredProfiles.length === 0 ? (
-        <div className="flex flex-col items-center justify-center p-12 text-center space-y-4 bg-slate-900/30 rounded-3xl border border-dashed border-slate-800">
-          <Server className="w-12 h-12 text-slate-600" />
+        <div className="flex flex-col items-center justify-center p-12 text-center space-y-4 bg-[#050b1a]/60 rounded-3xl border border-dashed border-[#172a59]">
+          <Server className="w-12 h-12 text-blue-400/40" />
           <div>
             <div className="text-base font-semibold text-slate-200">No Servers Found</div>
             <div className="text-xs text-slate-400 mt-1 max-w-sm">
@@ -295,16 +295,16 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
           <div className="flex items-center gap-3">
             <button
               onClick={handleOpenAdd}
-              className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-medium text-xs hover:brightness-110 transition-all flex items-center gap-1.5 cursor-pointer shadow-lg shadow-cyan-500/20"
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-600 text-white font-medium text-xs hover:brightness-110 transition-all flex items-center gap-1.5 cursor-pointer shadow-lg shadow-blue-900/40 ring-1 ring-blue-400/30"
             >
               <Plus className="w-4 h-4" />
               <span>Add Server</span>
             </button>
             <button
               onClick={() => setIsImportModalOpen(true)}
-              className="px-4 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 font-medium text-xs hover:bg-slate-700 transition-all flex items-center gap-1.5 cursor-pointer"
+              className="px-4 py-2 rounded-xl bg-[#081329] border border-[#1e3a8a]/60 text-blue-200 font-medium text-xs hover:bg-[#0f2147] transition-all flex items-center gap-1.5 cursor-pointer"
             >
-              <Download className="w-4 h-4" />
+              <Download className="w-4 h-4 text-blue-300" />
               <span>Import Links</span>
             </button>
           </div>
@@ -321,8 +321,8 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
               onClick={() => setSelectedProfileId(p.id)}
               className={`glass-panel rounded-2xl p-5 cursor-pointer transition-all duration-200 relative group border ${
                 isSelected
-                  ? 'border-cyan-500/60 bg-slate-900/90 shadow-lg shadow-cyan-950/40'
-                  : 'hover:border-slate-700'
+                  ? 'border-blue-500 bg-[#081538]/90 shadow-xl shadow-blue-950/60 ring-1 ring-blue-500/40'
+                  : 'hover:border-blue-500/50 hover:bg-[#081433]/70'
               }`}
             >
               {/* Header */}
@@ -383,7 +383,7 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                       e.stopPropagation();
                       testProfileLatency(p.id);
                     }}
-                    className="flex items-center gap-1 text-[11px] font-mono px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-300 hover:text-cyan-400 transition-colors"
+                    className="flex items-center gap-1.5 text-[11px] font-mono px-2.5 py-1 rounded-lg bg-[#070e24] border border-[#172a59] text-blue-200 hover:text-blue-300 hover:border-blue-500/60 transition-colors"
                   >
                     <Wifi className="w-3 h-3 text-emerald-400" />
                     <span>{p.latencyMs ? `${p.latencyMs} ms` : 'Ping'}</span>
@@ -393,21 +393,21 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                     <button
                       onClick={(e) => handleOpenEdit(p, e)}
                       title="Edit server"
-                      className="p-1 hover:text-cyan-400 text-slate-400"
+                      className="p-1.5 hover:text-blue-300 text-slate-400 transition-colors"
                     >
                       <Edit2 className="w-3.5 h-3.5" />
                     </button>
                     <button
                       onClick={(e) => handleDuplicate(p, e)}
                       title="Duplicate server"
-                      className="p-1 hover:text-cyan-400 text-slate-400"
+                      className="p-1.5 hover:text-blue-300 text-slate-400 transition-colors"
                     >
                       <Copy className="w-3.5 h-3.5" />
                     </button>
                     <button
                       onClick={(e) => handleDelete(p.id, e)}
                       title="Delete server"
-                      className="p-1 hover:text-rose-400 text-slate-400"
+                      className="p-1.5 hover:text-rose-400 text-slate-400 transition-colors"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -422,15 +422,15 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
 
       {/* Add / Edit Profile Modal */}
       {isModalOpen && editingProfile && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-xl w-full max-h-[90vh] flex flex-col p-6 shadow-2xl">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800 shrink-0">
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 z-50">
+          <div className="bg-[#040817] border border-[#172a59] rounded-3xl max-w-xl w-full max-h-[90vh] flex flex-col p-6 shadow-2xl shadow-black">
+            <div className="flex items-center justify-between pb-3 border-b border-[#172a59] shrink-0">
               <h2 className="font-bold text-base text-white">
                 {editingProfile.id ? 'Edit Server Profile' : 'Add New Server Profile'}
               </h2>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-slate-200"
+                className="text-slate-400 hover:text-blue-300"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -802,13 +802,13 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700"
+                  className="px-4 py-2 rounded-xl bg-[#081329] border border-[#172a59] text-blue-200 hover:bg-[#0f2147] transition-all"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-semibold"
+                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-blue-700 to-blue-600 hover:from-blue-600 hover:to-blue-500 text-white font-semibold shadow-md shadow-blue-900/40 ring-1 ring-blue-400/30 transition-all"
                 >
                   Save Profile
                 </button>
@@ -820,13 +820,13 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
 
       {/* Import Modal */}
       {isImportModalOpen && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 z-50">
+          <div className="bg-[#040817] border border-[#172a59] rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl shadow-black">
+            <div className="flex items-center justify-between pb-3 border-b border-[#172a59]">
               <h2 className="font-bold text-base text-white">Import Share Links</h2>
               <button
                 onClick={() => setIsImportModalOpen(false)}
-                className="text-slate-400 hover:text-slate-200"
+                className="text-slate-400 hover:text-blue-300"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -841,19 +841,19 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
               value={importText}
               onChange={(e) => setImportText(e.target.value)}
               placeholder="vless://uuid@host:443?security=tls#Frankfurt&#10;trojan://password@host:443#Tokyo"
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs font-mono text-white focus:outline-none focus:border-cyan-500"
+              className="w-full bg-[#070e24] border border-[#172a59] rounded-xl p-3 text-xs font-mono text-white focus:outline-none focus:border-blue-500"
             />
 
             <div className="flex items-center justify-end gap-2 pt-2">
               <button
                 onClick={() => setIsImportModalOpen(false)}
-                className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 text-xs"
+                className="px-4 py-2 rounded-xl bg-[#081329] border border-[#172a59] text-blue-200 hover:bg-[#0f2147] text-xs transition-all"
               >
                 Cancel
               </button>
               <button
                 onClick={handleImportLinks}
-                className="px-5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-xs"
+                className="px-5 py-2 rounded-xl bg-gradient-to-r from-blue-700 to-blue-600 hover:from-blue-600 hover:to-blue-500 text-white font-semibold text-xs shadow-md shadow-blue-900/40 ring-1 ring-blue-400/30 transition-all"
               >
                 Import Profiles
               </button>

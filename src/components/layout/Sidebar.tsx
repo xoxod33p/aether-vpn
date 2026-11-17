@@ -41,8 +41,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ store }) => {
       {/* Brand Header */}
       <div>
         <div className="h-12 flex items-center px-3.5 gap-2.5 border-b border-[#152347] bg-[#050b1a]">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-blue-800 via-blue-600 to-indigo-600 flex items-center justify-center shadow-md shadow-blue-900/40 text-white shrink-0 ring-1 ring-blue-500/30">
-            <Shield className="w-4 h-4 text-blue-100" />
+          <div className="w-7 h-7 rounded-lg bg-[#060e24] border border-[#2563eb]/40 p-0.5 flex items-center justify-center shadow-md shadow-blue-900/40 shrink-0 overflow-hidden">
+            <img
+              src="/logo.png"
+              alt="Logo"
+              className="w-full h-full object-contain"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = '/favicon.svg';
+              }}
+            />
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-1">

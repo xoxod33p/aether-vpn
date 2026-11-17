@@ -89,7 +89,7 @@ if "%BUILD_MODE%"=="test" (
         echo [ERROR] Frontend build/type-check failed.
         exit /b %ERRORLEVEL%
     )
-    cargo test --manifest-path src-tauri/Cargo.toml
+    cargo test --lib --manifest-path src-tauri/Cargo.toml
     exit /b %ERRORLEVEL%
 )
 

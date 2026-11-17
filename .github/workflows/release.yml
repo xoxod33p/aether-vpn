@@ -15,9 +15,9 @@ jobs:
       matrix:
         include:
           - platform: 'windows-latest'
-            args: ''
+            args: '--bundles nsis'
           - platform: 'ubuntu-22.04'
-            args: ''
+            args: '--bundles deb'
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -66,7 +66,7 @@ jobs:
         run: npm ci
 
       - name: Run Backend Rust Test Suite
-        run: cargo test --manifest-path src-tauri/Cargo.toml
+        run: cargo test --lib --manifest-path src-tauri/Cargo.toml
 
       - name: Build Frontend Application
         run: npm run build
@@ -82,3 +82,25 @@ jobs:
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
+
+      - name: Package Portable Windows Release
+        if: matrix.platform == 'windows-latest'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path "portable-dist"
+          if (Test-Path "src-tauri/target/release/aether-vpn.exe") {
+            Copy-Item "src-tauri/target/release/aether-vpn.exe" "portable-dist/aether-vpn-portable.exe"
+            Copy-Item "src-tauri/bin/sing-box.exe" "portable-dist/sing-box.exe"
+            Compress-Archive -Path "portable-dist/*" -DestinationPath "AetherVPN_v0.1.0_windows_portable.zip" -Force
+          }
+
+      - name: Upload Portable Windows Zip to Release
+        if: matrix.platform == 'windows-latest'
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: pwsh
+        run: |
+          if (Test-Path "AetherVPN_v0.1.0_windows_portable.zip") {
+            gh release upload v0.1.0 AetherVPN_v0.1.0_windows_portable.zip --clobber
+          }

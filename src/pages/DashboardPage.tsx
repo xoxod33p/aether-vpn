@@ -61,16 +61,16 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
                 ? 'bg-emerald-500/20'
                 : isConnecting
                 ? 'bg-amber-500/20'
-                : 'bg-cyan-500/10'
+                : 'bg-blue-600/15'
             }`}
           />
           <div
             className={`absolute -bottom-20 -right-20 w-48 h-48 rounded-full blur-3xl pointer-events-none transition-all duration-700 ${
               isConnected
-                ? 'bg-cyan-500/20'
+                ? 'bg-blue-600/20'
                 : isConnecting
                 ? 'bg-amber-500/10'
-                : 'bg-blue-500/10'
+                : 'bg-indigo-600/10'
             }`}
           />
 
@@ -80,7 +80,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
               <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
                 Mode
               </span>
-              <span className="text-[11px] px-2 py-0.2 rounded-full bg-slate-800 text-cyan-300 border border-slate-700 font-mono font-medium">
+              <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-[#060e24] text-blue-300 border border-[#172a59] font-mono font-medium">
                 {settings.defaultMode === 'tun' ? 'TUN' : 'System Proxy'}
               </span>
             </div>
@@ -88,10 +88,10 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
             <div className="flex items-center gap-1.5">
               <span className="text-[10px] text-slate-400">Protocol:</span>
               <span
-                className={`text-[10px] px-2 py-0.2 rounded-md font-mono uppercase font-semibold border ${
+                className={`text-[10px] px-2 py-0.5 rounded-md font-mono uppercase font-semibold border ${
                   selectedProfile
                     ? getProtocolBadgeColor(selectedProfile.protocol)
-                    : 'text-slate-400 bg-slate-800/60 border-slate-700'
+                    : 'text-slate-400 bg-[#060e24] border-[#172a59]'
                 }`}
               >
                 {selectedProfile?.protocol || 'None'}
@@ -120,7 +120,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
                     ? 'bg-gradient-to-tr from-amber-600 to-yellow-500 text-white shadow-amber-500/30 cursor-wait'
                     : isError
                     ? 'bg-gradient-to-tr from-rose-600 to-pink-500 text-white shadow-rose-500/30'
-                    : 'bg-gradient-to-tr from-cyan-600 via-blue-600 to-indigo-600 text-white shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:brightness-110'
+                    : 'bg-gradient-to-tr from-[#1e3a8a] via-[#1d4ed8] to-[#2563eb] text-white shadow-xl shadow-blue-900/40 hover:shadow-blue-700/50 hover:brightness-110 ring-4 ring-blue-500/20'
                 }`}
               >
                 <Power className="w-10 h-10 mb-0.5" />
@@ -166,9 +166,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
           </div>
 
           {/* Session Timer & Latency Footer */}
-          <div className="w-full grid grid-cols-2 gap-3 border-t border-slate-800/80 pt-3 z-10">
+          <div className="w-full grid grid-cols-2 gap-3 border-t border-[#172a59]/60 pt-3 z-10">
             <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 shrink-0">
+              <div className="w-7 h-7 rounded-lg bg-[#060e24] border border-[#172a59] flex items-center justify-center text-blue-400 shrink-0">
                 <Clock className="w-3.5 h-3.5" />
               </div>
               <div>
@@ -180,7 +180,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
             </div>
 
             <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 shrink-0">
+              <div className="w-7 h-7 rounded-lg bg-[#060e24] border border-[#172a59] flex items-center justify-center text-blue-400 shrink-0">
                 <Activity className="w-3.5 h-3.5" />
               </div>
               <div>
@@ -199,12 +199,12 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
           <div className="glass-panel rounded-2xl p-4 flex flex-col justify-between flex-1">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                <Server className="w-3.5 h-3.5 text-cyan-400" />
+                <Server className="w-3.5 h-3.5 text-blue-400" />
                 <span>Selected Endpoint</span>
               </div>
               <button
                 onClick={() => setActiveTab('servers')}
-                className="text-[11px] text-cyan-400 hover:text-cyan-300 flex items-center gap-0.5 font-medium cursor-pointer"
+                className="text-[11px] text-blue-400 hover:text-blue-300 flex items-center gap-0.5 font-medium cursor-pointer"
               >
                 <span>Change</span>
                 <ChevronRight className="w-3 h-3" />
@@ -213,7 +213,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
 
             {selectedProfile ? (
               <div className="space-y-3">
-                <div className="bg-slate-900/80 rounded-xl p-3 border border-slate-800/80">
+                <div className="bg-[#060e24]/90 rounded-xl p-3 border border-[#172a59]">
                   <div className="flex items-start justify-between">
                     <div>
                       <div className="font-bold text-sm text-white">
@@ -228,18 +228,18 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
                     </span>
                   </div>
 
-                  <div className="mt-3 flex items-center justify-between text-[11px] pt-2 border-t border-slate-800/80">
+                  <div className="mt-3 flex items-center justify-between text-[11px] pt-2 border-t border-[#172a59]/60">
                     <span className="text-slate-400">Region Group:</span>
-                    <span className="text-slate-200 font-medium">
+                    <span className="text-blue-200 font-medium">
                       {selectedProfile.groupName || 'Default'}
                     </span>
                   </div>
                 </div>
 
                 {/* Public Geo IP Card */}
-                <div className="bg-slate-900/50 rounded-xl p-3 border border-slate-800/60 flex items-center justify-between">
+                <div className="bg-[#04091a]/80 rounded-xl p-3 border border-[#172a59]/60 flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-cyan-950/60 border border-cyan-800/40 flex items-center justify-center text-cyan-400 shrink-0">
+                    <div className="w-7 h-7 rounded-lg bg-blue-950/60 border border-blue-800/40 flex items-center justify-center text-blue-400 shrink-0">
                       <Globe className="w-3.5 h-3.5" />
                     </div>
                     <div>
@@ -264,7 +264,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
                 </div>
               </div>
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-center p-4 text-center space-y-2 bg-slate-900/40 rounded-xl border border-dashed border-slate-800">
+              <div className="flex-1 flex flex-col items-center justify-center p-4 text-center space-y-2 bg-[#04091a]/40 rounded-xl border border-dashed border-[#172a59]">
                 <Server className="w-6 h-6 text-slate-600" />
                 <div>
                   <div className="text-xs font-semibold text-slate-300">No Servers Configured</div>
@@ -274,7 +274,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
                 </div>
                 <button
                   onClick={() => setActiveTab('servers')}
-                  className="mt-1 px-3 py-1 rounded-lg bg-cyan-600/20 text-cyan-400 border border-cyan-500/30 text-[11px] font-medium hover:bg-cyan-600/30 transition-all cursor-pointer"
+                  className="mt-1 px-3 py-1 rounded-lg bg-blue-600/20 text-blue-400 border border-blue-500/30 text-[11px] font-medium hover:bg-blue-600/30 transition-all cursor-pointer"
                 >
                   Configure Server
                 </button>
@@ -289,7 +289,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
                 className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
                   settings.killSwitchEnabled
                     ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                    : 'bg-slate-800 text-slate-400'
+                    : 'bg-[#060e24] text-blue-400 border border-[#172a59]'
                 }`}
               >
                 <Shield className="w-4 h-4" />
@@ -309,7 +309,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
             <button
               onClick={() => store.toggleKillSwitch(!settings.killSwitchEnabled)}
               className={`w-10 h-5 rounded-full transition-colors relative cursor-pointer shrink-0 ${
-                settings.killSwitchEnabled ? 'bg-amber-500' : 'bg-slate-700'
+                settings.killSwitchEnabled ? 'bg-amber-500' : 'bg-[#0e1a38] border border-[#1e3a8a]/60'
               }`}
             >
               <div
@@ -328,7 +328,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
         <div className="glass-card rounded-xl p-3.5 relative overflow-hidden">
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-[10px] font-semibold uppercase text-slate-400">Download</span>
-            <div className="w-6 h-6 rounded-md bg-emerald-950/60 border border-emerald-800/40 flex items-center justify-center text-emerald-400">
+            <div className="w-6 h-6 rounded-md bg-blue-950/60 border border-blue-800/40 flex items-center justify-center text-blue-400">
               <ArrowDown className="w-3 h-3" />
             </div>
           </div>
@@ -345,7 +345,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
         <div className="glass-card rounded-xl p-3.5 relative overflow-hidden">
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-[10px] font-semibold uppercase text-slate-400">Upload</span>
-            <div className="w-6 h-6 rounded-md bg-cyan-950/60 border border-cyan-800/40 flex items-center justify-center text-cyan-400">
+            <div className="w-6 h-6 rounded-md bg-blue-950/60 border border-blue-800/40 flex items-center justify-center text-blue-400">
               <ArrowUp className="w-3 h-3" />
             </div>
           </div>
@@ -362,7 +362,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
         <div className="glass-card rounded-xl p-3.5 relative overflow-hidden">
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-[10px] font-semibold uppercase text-slate-400">Active Sockets</span>
-            <div className="w-6 h-6 rounded-md bg-indigo-950/60 border border-indigo-800/40 flex items-center justify-center text-indigo-400">
+            <div className="w-6 h-6 rounded-md bg-blue-950/60 border border-blue-800/40 flex items-center justify-center text-blue-400">
               <Radio className="w-3 h-3" />
             </div>
           </div>
@@ -378,7 +378,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
         <div className="glass-card rounded-xl p-3.5 relative overflow-hidden">
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-[10px] font-semibold uppercase text-slate-400">DNS Protection</span>
-            <div className="w-6 h-6 rounded-md bg-purple-950/60 border border-purple-800/40 flex items-center justify-center text-purple-400">
+            <div className="w-6 h-6 rounded-md bg-blue-950/60 border border-blue-800/40 flex items-center justify-center text-blue-400">
               <Shield className="w-3 h-3" />
             </div>
           </div>

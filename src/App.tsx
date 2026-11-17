@@ -11,6 +11,7 @@ import { TrafficPage } from './pages/TrafficPage';
 import { LogsPage } from './pages/LogsPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { AboutPage } from './pages/AboutPage';
+import { LoadingSplash } from './components/common/LoadingSplash';
 
 export function App() {
   const store = useVpnStore();
@@ -41,7 +42,10 @@ export function App() {
   };
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-black text-slate-100 font-sans antialiased">
+    <div className="flex h-screen w-screen overflow-hidden bg-black text-slate-100 font-sans antialiased relative">
+      {/* Launch Loading Splash Overlay */}
+      <LoadingSplash />
+
       {/* Sidebar Navigation */}
       <Sidebar store={store} />
 
