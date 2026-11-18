@@ -4,13 +4,27 @@ use crate::models::{Profile, VpnProtocol, AppSettings, DnsConfig, OperatingMode,
 pub struct SingboxConfigBuilder;
 
 impl SingboxConfigBuilder {
+    fn resolve_domain_to_ip(domain: &str) -> Option<String> {
+        if domain.parse::<std::net::IpAddr>().is_ok() {
+            return Some(domain.to_string());
+        }
+        use std::net::ToSocketAddrs;
+        if let Ok(mut addrs) = (domain, 0).to_socket_addrs() {
+            if let Some(addr) = addrs.next() {
+                return Some(addr.ip().to_string());
+            }
+        }
+        None
+    }
+
     pub fn build(
         profile: &Profile,
         settings: &AppSettings,
         dns: &DnsConfig,
         rules: &[RoutingRule],
     ) -> Value {
-        let outbound = Self::build_profile_outbound(profile);
+        let target_server = Self::resolve_domain_to_ip(&profile.server).unwrap_or_else(|| profile.server.clone());
+        let outbound = Self::build_profile_outbound(profile, &target_server);
 
         let mut inbounds = Vec::new();
         match settings.default_mode {
@@ -19,6 +33,30 @@ impl SingboxConfigBuilder {
                 if settings.enable_ipv6 {
                     addresses.push("fdfe:dcba:9876::1/126");
                 }
+                let mut exclude_addrs = vec![
+                    "10.0.0.0/8".to_string(),
+                    "172.16.0.0/12".to_string(),
+                    "192.168.0.0/16".to_string(),
+                    "127.0.0.0/8".to_string(),
+                    "169.254.0.0/16".to_string(),
+                    "::1/128".to_string(),
+                    "fc00::/7".to_string(),
+                    "fe80::/10".to_string(),
+                    "1.1.1.1/32".to_string(),
+                    "1.0.0.1/32".to_string(),
+                    "8.8.8.8/32".to_string(),
+                    "8.8.4.4/32".to_string(),
+                ];
+                if target_server.parse::<std::net::IpAddr>().is_ok() {
+                    let cidr = if target_server.contains(':') {
+                        format!("{}/128", target_server)
+                    } else {
+                        format!("{}/32", target_server)
+                    };
+                    if !exclude_addrs.contains(&cidr) {
+                        exclude_addrs.push(cidr);
+                    }
+                }
                 inbounds.push(json!({
                     "type": "tun",
                     "tag": "tun-in",
@@ -26,16 +64,7 @@ impl SingboxConfigBuilder {
                     "address": addresses,
                     "auto_route": true,
                     "strict_route": false,
-                    "route_exclude_address": [
-                        "10.0.0.0/8",
-                        "172.16.0.0/12",
-                        "192.168.0.0/16",
-                        "127.0.0.0/8",
-                        "169.254.0.0/16",
-                        "::1/128",
-                        "fc00::/7",
-                        "fe80::/10"
-                    ],
+                    "route_exclude_address": exclude_addrs,
                     "endpoint_independent_nat": true,
                     "stack": "gvisor",
                     "sniff": true,
@@ -85,6 +114,23 @@ impl SingboxConfigBuilder {
         direct_domains.sort();
         direct_domains.dedup();
 
+        let mut direct_ips = vec![
+            "1.1.1.1/32".to_string(),
+            "1.0.0.1/32".to_string(),
+            "8.8.8.8/32".to_string(),
+            "8.8.4.4/32".to_string(),
+        ];
+        if target_server.parse::<std::net::IpAddr>().is_ok() {
+            let cidr = if target_server.contains(':') {
+                format!("{}/128", target_server)
+            } else {
+                format!("{}/32", target_server)
+            };
+            if !direct_ips.contains(&cidr) {
+                direct_ips.push(cidr);
+            }
+        }
+
         let mut route_rules = vec![
             json!({
                 "inbound": ["tun-in", "mixed-in"],
@@ -97,7 +143,7 @@ impl SingboxConfigBuilder {
                 "action": "hijack-dns"
             }),
             json!({
-                "ip_cidr": ["1.1.1.1/32", "1.0.0.1/32", "8.8.8.8/32", "8.8.4.4/32"],
+                "ip_cidr": direct_ips,
                 "outbound": "direct"
             }),
             json!({
@@ -232,13 +278,13 @@ impl SingboxConfigBuilder {
         })
     }
 
-    fn build_profile_outbound(p: &Profile) -> Value {
+    fn build_profile_outbound(p: &Profile, target_server: &str) -> Value {
         match p.protocol {
             VpnProtocol::Vless => {
                 let mut vless = json!({
                     "type": "vless",
                     "tag": "proxy",
-                    "server": p.server,
+                    "server": target_server,
                     "server_port": p.port,
                     "uuid": p.uuid.as_deref().unwrap_or("00000000-0000-0000-0000-000000000000"),
                 });
@@ -341,7 +387,7 @@ impl SingboxConfigBuilder {
                 json!({
                     "type": "shadowsocks",
                     "tag": "proxy",
-                    "server": p.server,
+                    "server": target_server,
                     "server_port": p.port,
                     "method": p.cipher.as_deref().unwrap_or("2022-blake3-aes-128-gcm"),
                     "password": p.password.as_deref().unwrap_or("")
@@ -352,7 +398,7 @@ impl SingboxConfigBuilder {
                 let mut trojan = json!({
                     "type": "trojan",
                     "tag": "proxy",
-                    "server": p.server,
+                    "server": target_server,
                     "server_port": p.port,
                     "password": p.password.as_deref().unwrap_or(""),
                 });
@@ -414,7 +460,7 @@ impl SingboxConfigBuilder {
                 json!({
                     "type": "wireguard",
                     "tag": "proxy",
-                    "server": p.server,
+                    "server": target_server,
                     "server_port": p.port,
                     "private_key": p.wg_private_key.as_deref().unwrap_or(""),
                     "peer_public_key": p.wg_public_key.as_deref().unwrap_or(""),
@@ -427,7 +473,7 @@ impl SingboxConfigBuilder {
                 json!({
                     "type": "hysteria2",
                     "tag": "proxy",
-                    "server": p.server,
+                    "server": target_server,
                     "server_port": p.port,
                     "password": p.password.as_deref().unwrap_or(""),
                     "tls": {
@@ -442,7 +488,7 @@ impl SingboxConfigBuilder {
                 let mut vmess = json!({
                     "type": "vmess",
                     "tag": "proxy",
-                    "server": p.server,
+                    "server": target_server,
                     "server_port": p.port,
                     "uuid": p.uuid.as_deref().unwrap_or("00000000-0000-0000-0000-000000000000"),
                     "security": p.cipher.as_deref().unwrap_or("auto"),
@@ -523,7 +569,7 @@ impl SingboxConfigBuilder {
                 let mut socks = json!({
                     "type": "socks",
                     "tag": "proxy",
-                    "server": p.server,
+                    "server": target_server,
                     "server_port": p.port
                 });
                 if let (Some(u), Some(pw)) = (&p.username, &p.password) {
