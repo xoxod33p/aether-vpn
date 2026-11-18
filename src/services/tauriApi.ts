@@ -194,10 +194,10 @@ export const vpnApi = {
 
   checkForUpdates: async (): Promise<UpdateInfo> => {
     return safeInvoke<UpdateInfo>('check_for_updates', {}, {
-      currentVersion: '0.1.3',
-      latestVersion: '0.1.3',
+      currentVersion: '0.1.4',
+      latestVersion: '0.1.4',
       isUpdateAvailable: false,
-      releaseName: 'AetherVPN v0.1.3',
+      releaseName: 'AetherVPN v0.1.4',
       releaseNotes: '',
       publishedAt: new Date().toISOString(),
       releaseUrl: 'https://github.com/xoxod33p/aether-vpn/releases',

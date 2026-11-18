@@ -313,7 +313,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ store, initialUpdate
           <div className="flex items-center justify-between pt-1">
             <div>
               <div className="text-xs font-semibold text-white">Installed Client</div>
-              <p className="text-[11px] text-neutral-400 mt-0.5 font-mono">AetherVPN v0.1.3</p>
+              <p className="text-[11px] text-neutral-400 mt-0.5 font-mono">AetherVPN v0.1.4</p>
             </div>
             <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${updateInfo?.isUpdateAvailable ? 'bg-white text-black font-bold' : 'bg-white/10 text-neutral-300'}`}>
               {updateInfo?.isUpdateAvailable ? `v${updateInfo.latestVersion} Available` : 'Up to Date'}
@@ -511,7 +511,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ store, initialUpdate
         </div>
 
         <div className="pt-2 pb-4 text-center text-neutral-500 text-[11px]">
-          <p className="font-semibold text-neutral-400">AetherVPN v0.1.3</p>
+          <p className="font-semibold text-neutral-400">AetherVPN v0.1.4</p>
           <p className="text-[10px] mt-0.5 text-neutral-500">Secure &bull; Encrypted &bull; Private</p>
         </div>
       </div>
