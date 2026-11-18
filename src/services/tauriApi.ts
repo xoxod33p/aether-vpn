@@ -212,4 +212,8 @@ export const vpnApi = {
   backupDatabase: async (): Promise<string> => {
     return safeInvoke<string>('backup_database', {}, 'Database backup created.');
   },
+
+  getDeviceId: async (): Promise<string> => {
+    return safeInvoke<string>('get_device_id', {}, 'AETH-DEV-LOCAL-01');
+  },
 };

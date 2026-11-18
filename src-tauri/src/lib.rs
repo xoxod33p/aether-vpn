@@ -148,6 +148,7 @@ pub fn run() {
             check_for_updates,
             download_and_install_update,
             backup_database,
+            get_device_id,
         ])
         .run(tauri::generate_context!())
         .expect("error while running AetherVPN application");

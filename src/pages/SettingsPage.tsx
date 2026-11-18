@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Settings as SettingsIcon,
   Shield,
@@ -16,6 +16,8 @@ import {
   Key,
   Cloud,
   Database,
+  Laptop,
+  Copy,
 } from 'lucide-react';
 import { AppSettings, OperatingMode, UpdateInfo, Profile } from '../types';
 import { VpnStoreType } from '../stores/useVpnStore';
@@ -41,6 +43,21 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ store, initialUpdate
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncSuccess, setSyncSuccess] = useState<string | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
+
+  const [deviceId, setDeviceId] = useState<string>('');
+  const [copiedDeviceId, setCopiedDeviceId] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    vpnApi.getDeviceId()
+      .then((id) => {
+        if (mounted && id) setDeviceId(id);
+      })
+      .catch(() => {});
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const handleToggle = <K extends keyof AppSettings>(key: K, value: AppSettings[K]) => {
     setSettings((prev) => {
@@ -235,6 +252,46 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ store, initialUpdate
               />
             </button>
           </div>
+        </div>
+
+        <div className="p-4 rounded-2xl bg-[#0d0d0d] border border-white/10 shadow-lg space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-xs font-bold text-neutral-300 uppercase tracking-wider">
+              <Laptop className="w-3.5 h-3.5 text-white" />
+              <span>Device Identification</span>
+            </div>
+            {copiedDeviceId && (
+              <span className="text-[10px] font-semibold text-neutral-200 bg-white/10 px-2 py-0.5 rounded-md border border-white/20 animate-fade">
+                Copied!
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between gap-3 pt-1">
+            <div className="min-w-0 flex-1">
+              <div className="text-xs font-semibold text-white">Unique Device ID</div>
+              <p className="text-[11px] font-mono text-neutral-400 mt-0.5 truncate select-all">
+                {deviceId || 'Detecting hardware ID...'}
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                if (deviceId) {
+                  navigator.clipboard.writeText(deviceId);
+                  setCopiedDeviceId(true);
+                  setTimeout(() => setCopiedDeviceId(false), 2000);
+                }
+              }}
+              title="Copy Device ID"
+              className="p-2 rounded-xl bg-[#161616] hover:bg-[#202020] border border-white/10 text-neutral-300 hover:text-white transition-all cursor-pointer shrink-0"
+            >
+              <Copy className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <p className="text-[10px] text-neutral-500">
+            Hardware-bound unique identifier for this PC. Each machine generates a distinct permanent ID.
+          </p>
         </div>
 
         <div className="p-4 rounded-2xl bg-[#0d0d0d] border border-white/10 shadow-lg space-y-3.5">
