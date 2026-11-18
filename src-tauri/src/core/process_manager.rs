@@ -161,8 +161,8 @@ impl ProcessManager {
                 let mut reader = BufReader::new(stdout).lines();
                 while let Ok(Some(line)) = reader.next_line().await {
                     let sanitized = sanitize_log_line(&line);
-                    info!(target: "sing-box", "{}", sanitized);
-                    crate::core::append_log("engine", &sanitized, Some("sing-box"));
+                    info!(target: "vpn", "{}", sanitized);
+                    crate::core::append_log("engine", &sanitized, Some("vpn"));
                 }
             });
         }
@@ -173,21 +173,32 @@ impl ProcessManager {
                 let mut reader = BufReader::new(stderr).lines();
                 while let Ok(Some(line)) = reader.next_line().await {
                     let sanitized = sanitize_log_line(&line);
-                    if sanitized.contains("FATAL") || sanitized.contains("ERROR") || sanitized.contains("Access is denied") {
+                    let level = if sanitized.contains("FATAL") || sanitized.contains("ERROR") || sanitized.contains("Access is denied") {
                         *last_err_sink.lock() = Some(sanitized.clone());
+                        "error"
+                    } else if sanitized.contains("WARN") {
+                        "warn"
+                    } else if sanitized.contains("INFO") {
+                        "info"
+                    } else {
+                        "engine"
+                    };
+                    if level == "error" || level == "warn" {
+                        warn!(target: "vpn", "{}", sanitized);
+                    } else {
+                        info!(target: "vpn", "{}", sanitized);
                     }
-                    warn!(target: "sing-box", "{}", sanitized);
-                    crate::core::append_log("warn", &sanitized, Some("sing-box"));
+                    crate::core::append_log(level, &sanitized, Some("vpn"));
                 }
             });
         }
 
-        // Validate that sing-box didn't exit immediately on startup
+        // Validate that core didn't exit immediately on startup
         tokio::time::sleep(tokio::time::Duration::from_millis(350)).await;
         if let Ok(Some(exit_status)) = child.try_wait() {
             let detail = self.last_error.lock().clone()
-                .unwrap_or_else(|| format!("sing-box process exited immediately with status {}", exit_status));
-            return Err(format!("sing-box engine failed to start: {}", detail));
+                .unwrap_or_else(|| format!("VPN process exited immediately with status {}", exit_status));
+            return Err(format!("VPN engine failed to start: {}", detail));
         }
 
         {
@@ -196,7 +207,7 @@ impl ProcessManager {
         }
         *self.config_path.lock() = Some(cfg_file);
 
-        info!("sing-box networking engine started successfully.");
+        info!("VPN core started successfully.");
         Ok(())
     }
 
@@ -207,10 +218,10 @@ impl ProcessManager {
         };
 
         if let Some(mut child) = child_opt {
-            info!("Stopping sing-box engine process...");
+            info!("Stopping VPN core process...");
             let _ = child.kill().await;
             let _ = child.wait().await;
-            info!("sing-box engine process terminated.");
+            info!("VPN core process terminated.");
         }
 
         // Clean any lingering orphans silently

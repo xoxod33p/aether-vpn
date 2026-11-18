@@ -1,7 +1,14 @@
 fn main() {
+    println!("cargo:rerun-if-changed=icons/icon.ico");
+    println!("cargo:rerun-if-changed=icons/icon.png");
+    println!("cargo:rerun-if-changed=icons/32x32.png");
+    println!("cargo:rerun-if-changed=icons/128x128.png");
+    println!("cargo:rerun-if-changed=tauri.conf.json");
+
     #[cfg(windows)]
     {
         let mut windows = tauri_build::WindowsAttributes::new();
+        windows = windows.window_icon_path("icons/icon.ico");
         windows = windows.app_manifest(r#"
 <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
   <dependency>

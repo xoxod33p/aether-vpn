@@ -31,20 +31,13 @@ export function formatDuration(seconds: number): string {
 export function getProtocolBadgeColor(protocol: string): string {
   switch (protocol.toLowerCase()) {
     case 'vless':
-      return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
     case 'vmess':
-      return 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30';
     case 'trojan':
-      return 'bg-amber-500/20 text-amber-400 border-amber-500/30';
     case 'shadowsocks':
-      return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
     case 'wireguard':
-      return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
     case 'hysteria2':
-      return 'bg-rose-500/20 text-rose-400 border-rose-500/30';
     case 'socks5':
-      return 'bg-slate-500/20 text-slate-300 border-slate-500/30';
     default:
-      return 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30';
+      return 'bg-white/10 text-neutral-200 border-white/20';
   }
 }

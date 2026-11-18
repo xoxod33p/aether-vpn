@@ -8,6 +8,7 @@ pub mod network;
 use commands::*;
 use core::ConnectionManager;
 use storage::Database;
+use tauri::Manager;
 use tracing_subscriber::EnvFilter;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -22,6 +23,16 @@ pub fn run() {
     let conn_mgr = ConnectionManager::new(db.clone());
 
     tauri::Builder::default()
+        .setup(|app| {
+            // Explicitly set runtime window and taskbar icon from bundled logo asset
+            if let Some(window) = app.get_webview_window("main") {
+                let icon_bytes = include_bytes!("../icons/icon.png");
+                if let Ok(icon) = tauri::image::Image::from_bytes(icon_bytes) {
+                    let _ = window.set_icon(icon);
+                }
+            }
+            Ok(())
+        })
         .manage(db)
         .manage(conn_mgr)
         .invoke_handler(tauri::generate_handler![

@@ -366,6 +366,19 @@ export function useVpnStore() {
     }
   }, [addLog]);
 
+  const importProfileLink = useCallback(async (link: string) => {
+    try {
+      const imported = await vpnApi.importProfileLink(link);
+      setProfiles((prev) => [imported, ...prev.filter((p) => p.id !== imported.id)]);
+      setSelectedProfileId(imported.id);
+      addLog('info', `Imported profile: ${imported.name}`);
+      return imported;
+    } catch (e: any) {
+      addLog('error', `Failed to import link: ${e.message}`);
+      throw e;
+    }
+  }, [addLog]);
+
   const updateOperatingMode = useCallback((mode: OperatingMode) => {
     setSettings((prev) => {
       const next = { ...prev, defaultMode: mode };
@@ -420,6 +433,7 @@ export function useVpnStore() {
     toggleFavorite,
     deleteProfile,
     saveProfile,
+    importProfileLink,
     updateOperatingMode,
     toggleKillSwitch,
     addLog,

@@ -92,7 +92,7 @@ impl ConnectionManager {
             let mut info = self.info.write();
             info.status = ConnectionStatus::Error;
             info.error_message = Some(err.clone());
-            crate::core::append_log("error", &format!("Failed to start sing-box engine: {}", err), Some("core::conn"));
+            crate::core::append_log("error", &format!("Failed to start VPN core: {}", err), Some("core::conn"));
             return Err(err);
         }
 
@@ -199,9 +199,9 @@ impl ConnectionManager {
                 // Check process health
                 if !process_mgr_arc.is_running().await {
                     let err_msg = process_mgr_arc.get_last_error()
-                        .unwrap_or_else(|| "sing-box engine exited unexpectedly".to_string());
-                    warn!("sing-box engine exited: {}", err_msg);
-                    crate::core::append_log("error", &format!("sing-box engine exited: {}", err_msg), Some("core::engine"));
+                        .unwrap_or_else(|| "VPN core terminated unexpectedly".to_string());
+                    warn!("VPN core exited: {}", err_msg);
+                    crate::core::append_log("error", &format!("VPN core exited: {}", err_msg), Some("core::engine"));
                     let mut current = info_arc.write();
                     current.status = ConnectionStatus::Error;
                     current.error_message = Some(err_msg);

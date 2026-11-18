@@ -27,8 +27,18 @@ impl SingboxConfigBuilder {
                     "address": addresses,
                     "auto_route": true,
                     "strict_route": false,
+                    "route_exclude_address": [
+                        "10.0.0.0/8",
+                        "172.16.0.0/12",
+                        "192.168.0.0/16",
+                        "127.0.0.0/8",
+                        "169.254.0.0/16",
+                        "::1/128",
+                        "fc00::/7",
+                        "fe80::/10"
+                    ],
                     "endpoint_independent_nat": true,
-                    "stack": "gvisor",
+                    "stack": "system",
                     "sniff": true,
                     "mtu": settings.mtu
                 }));
@@ -89,6 +99,16 @@ impl SingboxConfigBuilder {
             json!({
                 "port": [53],
                 "action": "hijack-dns"
+            }),
+            // Ensure local network and loopback bypass proxy for LAN apps, screenshots & gaming
+            json!({
+                "ip_is_private": true,
+                "outbound": "direct"
+            }),
+            json!({
+                "domain": ["localhost"],
+                "domain_suffix": [".local", ".lan", ".localhost"],
+                "outbound": "direct"
             }),
         ];
 
@@ -164,6 +184,11 @@ impl SingboxConfigBuilder {
         let mut dns_rules = vec![
             json!({
                 "outbound": "direct",
+                "server": "local-dns"
+            }),
+            json!({
+                "domain": ["localhost"],
+                "domain_suffix": [".local", ".lan", ".localhost"],
                 "server": "local-dns"
             }),
         ];

@@ -5,15 +5,17 @@ import {
   ArrowUp,
   Clock,
   Shield,
+  ShieldAlert,
   Server,
   Activity,
   Globe,
   Radio,
   ChevronRight,
   AlertCircle,
+  Zap,
 } from 'lucide-react';
 import { VpnStoreType } from '../stores/useVpnStore';
-import { formatBytes, formatSpeed, formatDuration, getProtocolBadgeColor } from '../utils/formatters';
+import { formatSpeed, formatDuration, getProtocolBadgeColor } from '../utils/formatters';
 
 interface DashboardPageProps {
   store: VpnStoreType;
@@ -29,6 +31,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
     disconnect,
     setActiveTab,
     settings,
+    updateOperatingMode,
   } = store;
 
   const isConnected = connectionInfo.status === 'Connected';
@@ -49,344 +52,264 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
   };
 
   return (
-    <div className="p-4 sm:p-5 max-w-5xl mx-auto space-y-4 select-none">
-      {/* Top Banner / Hero Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
-        {/* Large Connect / Disconnect Card */}
-        <div className="lg:col-span-7 glass-panel rounded-2xl p-5 flex flex-col justify-between items-center relative overflow-hidden">
-          {/* Ambient Glows */}
-          <div
-            className={`absolute -top-20 -left-20 w-48 h-48 rounded-full blur-3xl pointer-events-none transition-all duration-700 ${
-              isConnected
-                ? 'bg-emerald-500/20'
-                : isConnecting
-                ? 'bg-amber-500/20'
-                : 'bg-blue-600/15'
+    <div className="flex flex-col h-full justify-between p-4 sm:p-6 max-w-md mx-auto w-full select-none relative overflow-hidden">
+      {/* Faded Background Logo Watermark */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none z-0">
+        <img
+          src="/logo.png"
+          alt=""
+          className="w-64 h-64 sm:w-72 sm:h-72 object-contain opacity-[0.06] blur-[0.5px] scale-110"
+          onError={(e) => {
+            (e.target as HTMLImageElement).style.display = 'none';
+          }}
+        />
+      </div>
+      {/* Top Bar: Mode Toggle & Shield Status */}
+      <div className="flex items-center justify-between gap-2 pt-1">
+        {/* Mode Pill (TUN / Proxy) */}
+        <div className="flex items-center bg-[#0d0d0d] p-1 rounded-xl border border-white/10 shadow-inner">
+          <button
+            onClick={() => updateOperatingMode('tun')}
+            className={`px-3 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+              settings.defaultMode === 'tun'
+                ? 'bg-white text-black shadow-md'
+                : 'text-neutral-400 hover:text-white'
             }`}
-          />
-          <div
-            className={`absolute -bottom-20 -right-20 w-48 h-48 rounded-full blur-3xl pointer-events-none transition-all duration-700 ${
-              isConnected
-                ? 'bg-blue-600/20'
-                : isConnecting
-                ? 'bg-amber-500/10'
-                : 'bg-indigo-600/10'
+          >
+            <Radio className="w-3 h-3" />
+            <span>VPN (TUN)</span>
+          </button>
+          <button
+            onClick={() => updateOperatingMode('system_proxy')}
+            className={`px-3 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+              settings.defaultMode === 'system_proxy'
+                ? 'bg-white text-black shadow-md'
+                : 'text-neutral-400 hover:text-white'
             }`}
-          />
-
-          {/* Mode Pill Header */}
-          <div className="w-full flex justify-between items-center z-10">
-            <div className="flex items-center gap-1.5">
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                Mode
-              </span>
-              <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-[#060e24] text-blue-300 border border-[#172a59] font-mono font-medium">
-                {settings.defaultMode === 'tun' ? 'TUN' : 'System Proxy'}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-1.5">
-              <span className="text-[10px] text-slate-400">Protocol:</span>
-              <span
-                className={`text-[10px] px-2 py-0.5 rounded-md font-mono uppercase font-semibold border ${
-                  selectedProfile
-                    ? getProtocolBadgeColor(selectedProfile.protocol)
-                    : 'text-slate-400 bg-[#060e24] border-[#172a59]'
-                }`}
-              >
-                {selectedProfile?.protocol || 'None'}
-              </span>
-            </div>
-          </div>
-
-          {/* Connect Button Centerpiece */}
-          <div className="my-4 flex flex-col items-center z-10">
-            <div className="relative group">
-              {/* Pulsing Outer Rings */}
-              {isConnected && (
-                <div className="absolute -inset-3 rounded-full bg-emerald-500/20 animate-ping pointer-events-none" />
-              )}
-              {isConnecting && (
-                <div className="absolute -inset-3 rounded-full bg-amber-500/20 animate-pulse pointer-events-none" />
-              )}
-
-              <button
-                onClick={handleToggle}
-                disabled={isConnecting || isDisconnecting}
-                className={`w-32 h-32 rounded-full flex flex-col items-center justify-center transition-all duration-300 shadow-xl relative cursor-pointer active:scale-95 ${
-                  isConnected
-                    ? 'bg-gradient-to-tr from-emerald-600 to-teal-500 text-white shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:brightness-110'
-                    : isConnecting || isDisconnecting
-                    ? 'bg-gradient-to-tr from-amber-600 to-yellow-500 text-white shadow-amber-500/30 cursor-wait'
-                    : isError
-                    ? 'bg-gradient-to-tr from-rose-600 to-pink-500 text-white shadow-rose-500/30'
-                    : 'bg-gradient-to-tr from-[#1e3a8a] via-[#1d4ed8] to-[#2563eb] text-white shadow-xl shadow-blue-900/40 hover:shadow-blue-700/50 hover:brightness-110 ring-4 ring-blue-500/20'
-                }`}
-              >
-                <Power className="w-10 h-10 mb-0.5" />
-                <span className="text-xs font-bold tracking-wider uppercase">
-                  {isConnected
-                    ? 'Disconnect'
-                    : isConnecting
-                    ? 'Connecting'
-                    : isDisconnecting
-                    ? 'Stopping'
-                    : !selectedProfile
-                    ? 'Select Server'
-                    : 'Connect'}
-                </span>
-              </button>
-            </div>
-
-            {/* Connection Status Label */}
-            <div className="mt-3 text-center">
-              <div className="flex items-center justify-center gap-1.5">
-                <span
-                  className={`w-2 h-2 rounded-full ${
-                    isConnected
-                      ? 'bg-emerald-400 shadow-md shadow-emerald-400/50'
-                      : isConnecting
-                      ? 'bg-amber-400 animate-bounce'
-                      : isError
-                      ? 'bg-rose-400'
-                      : 'bg-slate-500'
-                  }`}
-                />
-                <span className="text-sm font-semibold text-white tracking-wide">
-                  {connectionInfo.status}
-                </span>
-              </div>
-              {connectionInfo.errorMessage && (
-                <div className="mt-1.5 flex items-center gap-1 text-[11px] text-rose-400 bg-rose-950/40 px-2.5 py-0.5 rounded-lg border border-rose-900/40">
-                  <AlertCircle className="w-3 h-3" />
-                  <span>{connectionInfo.errorMessage}</span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Session Timer & Latency Footer */}
-          <div className="w-full grid grid-cols-2 gap-3 border-t border-[#172a59]/60 pt-3 z-10">
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-[#060e24] border border-[#172a59] flex items-center justify-center text-blue-400 shrink-0">
-                <Clock className="w-3.5 h-3.5" />
-              </div>
-              <div>
-                <div className="text-[10px] text-slate-400 uppercase font-semibold">Uptime</div>
-                <div className="text-xs font-mono font-bold text-white">
-                  {isConnected ? formatDuration(durationSecs) : '00:00:00'}
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-[#060e24] border border-[#172a59] flex items-center justify-center text-blue-400 shrink-0">
-                <Activity className="w-3.5 h-3.5" />
-              </div>
-              <div>
-                <div className="text-[10px] text-slate-400 uppercase font-semibold">Latency</div>
-                <div className="text-xs font-mono font-bold text-white">
-                  {isConnected ? `${trafficStats.latencyMs} ms` : '-- ms'}
-                </div>
-              </div>
-            </div>
-          </div>
+          >
+            <Globe className="w-3 h-3" />
+            <span>Proxy</span>
+          </button>
         </div>
 
-        {/* Right Info Stack */}
-        <div className="lg:col-span-5 flex flex-col justify-between gap-4">
-          {/* Active Server Card */}
-          <div className="glass-panel rounded-2xl p-4 flex flex-col justify-between flex-1">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                <Server className="w-3.5 h-3.5 text-blue-400" />
-                <span>Selected Endpoint</span>
-              </div>
-              <button
-                onClick={() => setActiveTab('servers')}
-                className="text-[11px] text-blue-400 hover:text-blue-300 flex items-center gap-0.5 font-medium cursor-pointer"
-              >
-                <span>Change</span>
-                <ChevronRight className="w-3 h-3" />
-              </button>
-            </div>
-
-            {selectedProfile ? (
-              <div className="space-y-3">
-                <div className="bg-[#060e24]/90 rounded-xl p-3 border border-[#172a59]">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="font-bold text-sm text-white">
-                        {selectedProfile.name}
-                      </div>
-                      <div className="text-[11px] text-slate-400 font-mono mt-0.5">
-                        {selectedProfile.server}:{selectedProfile.port}
-                      </div>
-                    </div>
-                    <span className="text-base">
-                      {selectedProfile.countryCode === 'DE' ? '🇩🇪' : selectedProfile.countryCode === 'JP' ? '🇯🇵' : selectedProfile.countryCode === 'GB' ? '🇬🇧' : selectedProfile.countryCode === 'SG' ? '🇸🇬' : '🇺🇸'}
-                    </span>
-                  </div>
-
-                  <div className="mt-3 flex items-center justify-between text-[11px] pt-2 border-t border-[#172a59]/60">
-                    <span className="text-slate-400">Region Group:</span>
-                    <span className="text-blue-200 font-medium">
-                      {selectedProfile.groupName || 'Default'}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Public Geo IP Card */}
-                <div className="bg-[#04091a]/80 rounded-xl p-3 border border-[#172a59]/60 flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-blue-950/60 border border-blue-800/40 flex items-center justify-center text-blue-400 shrink-0">
-                      <Globe className="w-3.5 h-3.5" />
-                    </div>
-                    <div>
-                      <div className="text-[10px] text-slate-400 uppercase font-semibold">
-                        Public IP
-                      </div>
-                      <div className="text-xs font-mono font-bold text-white">
-                        {connectionInfo.publicIp || 'Detecting...'}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-[10px] text-slate-400 uppercase font-semibold">
-                      Location
-                    </div>
-                    <div className="text-xs font-medium text-slate-200">
-                      {connectionInfo.location?.city
-                        ? `${connectionInfo.location.city}, ${connectionInfo.location.country}`
-                        : 'Detecting...'}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="flex-1 flex flex-col items-center justify-center p-4 text-center space-y-2 bg-[#04091a]/40 rounded-xl border border-dashed border-[#172a59]">
-                <Server className="w-6 h-6 text-slate-600" />
-                <div>
-                  <div className="text-xs font-semibold text-slate-300">No Servers Configured</div>
-                  <div className="text-[10px] text-slate-500 mt-0.5 max-w-xs">
-                    Add a server manually or import a subscription link.
-                  </div>
-                </div>
-                <button
-                  onClick={() => setActiveTab('servers')}
-                  className="mt-1 px-3 py-1 rounded-lg bg-blue-600/20 text-blue-400 border border-blue-500/30 text-[11px] font-medium hover:bg-blue-600/30 transition-all cursor-pointer"
-                >
-                  Configure Server
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Quick Kill Switch Card */}
-          <div className="glass-panel rounded-2xl p-3.5 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div
-                className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                  settings.killSwitchEnabled
-                    ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                    : 'bg-[#060e24] text-blue-400 border border-[#172a59]'
-                }`}
-              >
-                <Shield className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="font-semibold text-xs text-white">
-                  Firewall Kill Switch
-                </div>
-                <div className="text-[11px] text-slate-400">
-                  {settings.killSwitchEnabled
-                    ? 'Blocking all leaks if tunnel drops'
-                    : 'Disabled. Non-VPN traffic allowed'}
-                </div>
-              </div>
-            </div>
-
-            <button
-              onClick={() => store.toggleKillSwitch(!settings.killSwitchEnabled)}
-              className={`w-10 h-5 rounded-full transition-colors relative cursor-pointer shrink-0 ${
-                settings.killSwitchEnabled ? 'bg-amber-500' : 'bg-[#0e1a38] border border-[#1e3a8a]/60'
-              }`}
-            >
-              <div
-                className={`w-4 h-4 rounded-full bg-white transition-transform duration-200 absolute top-0.5 ${
-                  settings.killSwitchEnabled ? 'left-5.5' : 'left-0.5'
-                }`}
-              />
-            </button>
-          </div>
+        {/* Protection Status Badge */}
+        <div
+          onClick={() => setActiveTab('settings')}
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#0d0d0d] border border-white/10 text-xs font-medium cursor-pointer hover:border-white/30 transition-all"
+        >
+          {settings.killSwitchEnabled ? (
+            <ShieldAlert className="w-3.5 h-3.5 text-neutral-200" />
+          ) : (
+            <Shield className="w-3.5 h-3.5 text-neutral-200" />
+          )}
+          <span className="text-[11px] text-neutral-300 font-mono">
+            {settings.killSwitchEnabled ? 'Kill Switch' : 'Protected'}
+          </span>
         </div>
       </div>
 
-      {/* Real-Time Live Telemetry Metrics */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {/* Download Speed */}
-        <div className="glass-card rounded-xl p-3.5 relative overflow-hidden">
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[10px] font-semibold uppercase text-slate-400">Download</span>
-            <div className="w-6 h-6 rounded-md bg-blue-950/60 border border-blue-800/40 flex items-center justify-center text-blue-400">
-              <ArrowDown className="w-3 h-3" />
-            </div>
-          </div>
-          <div className="text-lg font-mono font-bold text-white tracking-tight">
-            {formatSpeed(trafficStats.downloadSpeedBps)}
-          </div>
-          <div className="mt-1 text-[10px] text-slate-400 font-mono flex items-center gap-1">
-            <span>Total:</span>
-            <span className="text-slate-200 font-semibold">{formatBytes(trafficStats.totalDownloadBytes)}</span>
-          </div>
+      {/* Hero Centerpiece: Large Tactical Connect Button */}
+      <div className="flex flex-col items-center justify-center my-auto py-6">
+        {/* Dynamic Glow Behind Button */}
+        <div className="relative flex items-center justify-center">
+          <div
+            className={`absolute w-52 h-52 rounded-full blur-3xl transition-all duration-700 pointer-events-none ${
+              isConnected
+                ? 'bg-white/20 scale-110'
+                : isConnecting
+                ? 'bg-white/15 scale-105 animate-pulse'
+                : isError
+                ? 'bg-red-500/15'
+                : 'bg-white/5 scale-95'
+            }`}
+          />
+
+          {/* Animated Pulsing Ring when Active */}
+          {isConnected && (
+            <div className="absolute -inset-4 rounded-full border border-white/30 animate-ping pointer-events-none" />
+          )}
+          {isConnecting && (
+            <div className="absolute -inset-4 rounded-full border border-white/30 animate-pulse pointer-events-none" />
+          )}
+
+          {/* The Big Power Button */}
+          <button
+            onClick={handleToggle}
+            disabled={isConnecting || isDisconnecting}
+            className={`w-36 h-36 rounded-full flex flex-col items-center justify-center transition-all duration-300 cursor-pointer active:scale-95 shadow-2xl relative z-10 ${
+              isConnected
+                ? 'bg-white text-black shadow-[0_0_50px_rgba(255,255,255,0.4)] ring-4 ring-white/25 hover:bg-neutral-100'
+                : isConnecting || isDisconnecting
+                ? 'bg-neutral-800 text-neutral-200 border-2 border-white/30 cursor-wait animate-pulse'
+                : isError
+                ? 'bg-neutral-900 text-red-300 border border-red-500/40 hover:brightness-110'
+                : 'bg-[#0d0d0d] hover:bg-[#151515] text-white border-2 border-white/20 hover:border-white/60 shadow-2xl hover:shadow-[0_0_30px_rgba(255,255,255,0.15)] ring-2 ring-white/5'
+            }`}
+          >
+            <Power className="w-12 h-12 mb-1.5 transition-transform group-hover:scale-105" />
+            <span className="text-xs font-bold tracking-widest uppercase">
+              {isConnected
+                ? 'CONNECTED'
+                : isConnecting
+                ? 'CONNECTING'
+                : isDisconnecting
+                ? 'STOPPING'
+                : !selectedProfile
+                ? 'CHOOSE SERVER'
+                : 'CONNECT'}
+            </span>
+          </button>
         </div>
 
-        {/* Upload Speed */}
-        <div className="glass-card rounded-xl p-3.5 relative overflow-hidden">
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[10px] font-semibold uppercase text-slate-400">Upload</span>
-            <div className="w-6 h-6 rounded-md bg-blue-950/60 border border-blue-800/40 flex items-center justify-center text-blue-400">
-              <ArrowUp className="w-3 h-3" />
+        {/* Status Message Text */}
+        <div className="mt-6 text-center space-y-1">
+          <div className="flex items-center justify-center gap-2">
+            <span
+              className={`w-2.5 h-2.5 rounded-full ${
+                isConnected
+                  ? 'bg-white shadow-[0_0_10px_rgba(255,255,255,0.9)] animate-pulse'
+                  : isConnecting
+                  ? 'bg-neutral-400 animate-bounce'
+                  : isError
+                  ? 'bg-red-400'
+                  : 'bg-neutral-600'
+              }`}
+            />
+            <span className="text-sm font-bold tracking-wide text-white">
+              {isConnected
+                ? 'Protected & Encrypted'
+                : isConnecting
+                ? 'Establishing Secure Tunnel...'
+                : isError
+                ? 'Connection Error'
+                : 'Not Connected'}
+            </span>
+          </div>
+
+          {/* Public IP & Geo */}
+          <p className="text-xs text-neutral-400 font-mono">
+            {connectionInfo.publicIp ? (
+              <span>
+                {connectionInfo.publicIp}
+                {connectionInfo.location?.city ? ` • ${connectionInfo.location.city}, ${connectionInfo.location.countryCode}` : ''}
+              </span>
+            ) : (
+              'IP Protected'
+            )}
+          </p>
+
+          {/* Error Message banner if any */}
+          {connectionInfo.errorMessage && (
+            <div className="mt-2 inline-flex items-center gap-1.5 text-xs text-red-300 bg-red-950/60 px-3 py-1 rounded-xl border border-red-800/60">
+              <AlertCircle className="w-3.5 h-3.5 text-red-400 shrink-0" />
+              <span className="truncate max-w-[280px]">{connectionInfo.errorMessage}</span>
             </div>
-          </div>
-          <div className="text-lg font-mono font-bold text-white tracking-tight">
-            {formatSpeed(trafficStats.uploadSpeedBps)}
-          </div>
-          <div className="mt-1 text-[10px] text-slate-400 font-mono flex items-center gap-1">
-            <span>Total:</span>
-            <span className="text-slate-200 font-semibold">{formatBytes(trafficStats.totalUploadBytes)}</span>
-          </div>
+          )}
         </div>
 
-        {/* Active Connections */}
-        <div className="glass-card rounded-xl p-3.5 relative overflow-hidden">
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[10px] font-semibold uppercase text-slate-400">Active Sockets</span>
-            <div className="w-6 h-6 rounded-md bg-blue-950/60 border border-blue-800/40 flex items-center justify-center text-blue-400">
-              <Radio className="w-3 h-3" />
+        {/* Live Metrics Grid (Visible when Connected) */}
+        {isConnected && (
+          <div className="w-full grid grid-cols-4 gap-2 mt-6 p-3 rounded-2xl bg-[#0d0d0d] border border-white/10 shadow-xl">
+            {/* Download */}
+            <div className="flex flex-col items-center">
+              <div className="flex items-center gap-1 text-[10px] text-neutral-400 uppercase font-semibold">
+                <ArrowDown className="w-3 h-3 text-white" />
+                <span>Down</span>
+              </div>
+              <div className="text-xs font-mono font-bold text-white mt-0.5 truncate">
+                {formatSpeed(trafficStats.downloadSpeedBps)}
+              </div>
             </div>
-          </div>
-          <div className="text-lg font-mono font-bold text-white tracking-tight">
-            {trafficStats.activeConnections}
-          </div>
-          <div className="mt-1 text-[10px] text-slate-400 truncate">
-            <span>sing-box routed sockets</span>
-          </div>
-        </div>
 
-        {/* DNS Leak Status */}
-        <div className="glass-card rounded-xl p-3.5 relative overflow-hidden">
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[10px] font-semibold uppercase text-slate-400">DNS Protection</span>
-            <div className="w-6 h-6 rounded-md bg-blue-950/60 border border-blue-800/40 flex items-center justify-center text-blue-400">
-              <Shield className="w-3 h-3" />
+            {/* Upload */}
+            <div className="flex flex-col items-center">
+              <div className="flex items-center gap-1 text-[10px] text-neutral-400 uppercase font-semibold">
+                <ArrowUp className="w-3 h-3 text-neutral-300" />
+                <span>Up</span>
+              </div>
+              <div className="text-xs font-mono font-bold text-white mt-0.5 truncate">
+                {formatSpeed(trafficStats.uploadSpeedBps)}
+              </div>
+            </div>
+
+            {/* Latency */}
+            <div className="flex flex-col items-center">
+              <div className="flex items-center gap-1 text-[10px] text-neutral-400 uppercase font-semibold">
+                <Activity className="w-3 h-3 text-neutral-300" />
+                <span>Ping</span>
+              </div>
+              <div className="text-xs font-mono font-bold text-white mt-0.5">
+                {trafficStats.latencyMs ? `${trafficStats.latencyMs} ms` : '--'}
+              </div>
+            </div>
+
+            {/* Uptime */}
+            <div className="flex flex-col items-center">
+              <div className="flex items-center gap-1 text-[10px] text-neutral-400 uppercase font-semibold">
+                <Clock className="w-3 h-3 text-neutral-300" />
+                <span>Time</span>
+              </div>
+              <div className="text-xs font-mono font-bold text-white mt-0.5">
+                {formatDuration(durationSecs)}
+              </div>
             </div>
           </div>
-          <div className="text-lg font-mono font-bold text-emerald-400 tracking-tight">
-            Protected
+        )}
+      </div>
+
+      {/* Selected Server Card: Quick Switcher */}
+      <div className="w-full pb-1">
+        <div
+          onClick={() => setActiveTab('servers')}
+          className="group flex items-center justify-between p-3.5 rounded-2xl bg-[#0d0d0d] hover:bg-[#141414] border border-white/10 hover:border-white/30 shadow-lg cursor-pointer transition-all duration-200"
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            {/* Country Flag / Icon */}
+            <div className="w-10 h-10 rounded-xl bg-[#050505] border border-white/10 flex items-center justify-center text-lg shrink-0 shadow-inner">
+              {selectedProfile?.countryCode === 'SG'
+                ? '🇸🇬'
+                : selectedProfile?.countryCode === 'US'
+                ? '🇺🇸'
+                : selectedProfile?.countryCode === 'DE'
+                ? '🇩🇪'
+                : selectedProfile?.countryCode === 'JP'
+                ? '🇯🇵'
+                : selectedProfile?.countryCode === 'GB'
+                ? '🇬🇧'
+                : '🌐'}
+            </div>
+
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm font-bold text-white truncate group-hover:text-neutral-200 transition-colors">
+                  {selectedProfile?.name || 'No Server Selected'}
+                </span>
+                {selectedProfile?.protocol && (
+                  <span
+                    className={`text-[9px] px-1.5 py-0.2 rounded font-mono uppercase font-bold border ${getProtocolBadgeColor(
+                      selectedProfile.protocol
+                    )}`}
+                  >
+                    {selectedProfile.protocol}
+                  </span>
+                )}
+              </div>
+              <div className="text-[11px] text-neutral-400 font-mono truncate mt-0.5">
+                {selectedProfile ? `${selectedProfile.server}:${selectedProfile.port}` : 'Click to pick a server'}
+              </div>
+            </div>
           </div>
-          <div className="mt-1 text-[10px] text-slate-400 truncate">
-            <span>DoH: Cloudflare 1.1.1.1</span>
+
+          {/* Right Chevron & Ping */}
+          <div className="flex items-center gap-2 shrink-0">
+            {selectedProfile?.latencyMs && selectedProfile.latencyMs > 0 ? (
+              <span className="text-[11px] font-mono font-semibold text-neutral-200 bg-white/10 px-2 py-0.5 rounded-md border border-white/15">
+                {selectedProfile.latencyMs} ms
+              </span>
+            ) : null}
+            <div className="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center text-neutral-400 group-hover:text-black group-hover:bg-white transition-all">
+              <ChevronRight className="w-4 h-4" />
+            </div>
           </div>
         </div>
       </div>

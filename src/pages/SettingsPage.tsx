@@ -1,14 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Settings as SettingsIcon,
   Shield,
-  Wifi,
-  Sliders,
-  Bell,
-  RefreshCw,
-  Cpu,
-  Save,
+  ShieldAlert,
+  Globe,
+  Radio,
+  Zap,
+  Terminal,
   Check,
+  Power,
+  RotateCcw,
 } from 'lucide-react';
 import { AppSettings, OperatingMode } from '../types';
 import { VpnStoreType } from '../stores/useVpnStore';
@@ -19,238 +20,247 @@ interface SettingsPageProps {
 }
 
 export const SettingsPage: React.FC<SettingsPageProps> = ({ store }) => {
-  const { settings, setSettings, addLog } = store;
+  const { settings, setSettings, toggleKillSwitch, updateOperatingMode, setActiveTab } = store;
+  const [savedSuccess, setSavedSuccess] = useState(false);
 
-  const [savedSuccess, setSavedSuccess] = React.useState(false);
-
-  const handleUpdate = <K extends keyof AppSettings>(key: K, value: AppSettings[K]) => {
+  const handleToggle = <K extends keyof AppSettings>(key: K, value: AppSettings[K]) => {
     setSettings((prev) => {
       const next = { ...prev, [key]: value };
       vpnApi.saveSettings(next).catch(console.error);
       return next;
     });
     setSavedSuccess(true);
-    setTimeout(() => setSavedSuccess(false), 1500);
+    setTimeout(() => setSavedSuccess(false), 1200);
   };
 
   return (
-    <div className="p-4 sm:p-5 max-w-4xl mx-auto space-y-4 select-none">
+    <div className="flex flex-col h-full p-4 sm:p-5 max-w-md mx-auto w-full select-none overflow-y-auto">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-base font-semibold text-white">Client Preferences</h2>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Configure system startup, connection defaults, virtual MTU, and firewall leak rules.
-          </p>
+      <div className="flex items-center justify-between pb-3 border-b border-white/10 shrink-0 mb-4">
+        <div className="flex items-center gap-2">
+          <SettingsIcon className="w-4 h-4 text-white" />
+          <h2 className="text-base font-bold text-white">Settings</h2>
         </div>
 
         {savedSuccess && (
-          <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-medium bg-emerald-950/40 px-3 py-1 rounded-full border border-emerald-800/40 animate-fade">
-            <Check className="w-3.5 h-3.5" />
+          <div className="flex items-center gap-1 text-[11px] font-semibold text-neutral-200 bg-white/10 px-2 py-0.5 rounded-md border border-white/20 animate-fade">
+            <Check className="w-3 h-3" />
             <span>Saved</span>
           </div>
         )}
       </div>
 
-      {/* General Settings */}
-      <div className="glass-panel rounded-2xl p-6 border border-slate-800/80 space-y-4">
-        <h3 className="font-bold text-sm text-white flex items-center gap-2">
-          <SettingsIcon className="w-4 h-4 text-cyan-400" />
-          <span>General Settings</span>
-        </h3>
+      <div className="space-y-4">
+        {/* Security & Protection Card */}
+        <div className="p-4 rounded-2xl bg-[#0d0d0d] border border-white/10 shadow-lg space-y-3.5">
+          <div className="flex items-center gap-2 text-xs font-bold text-neutral-300 uppercase tracking-wider">
+            <Shield className="w-3.5 h-3.5 text-white" />
+            <span>Security & Privacy</span>
+          </div>
 
-        <div className="divide-y divide-slate-800/60 text-xs">
-          <div className="py-3 flex items-center justify-between">
+          {/* Kill Switch Toggle */}
+          <div className="flex items-center justify-between gap-3">
             <div>
-              <div className="text-slate-200 font-semibold">Start with Operating System</div>
-              <div className="text-slate-400 text-[11px]">Launch AetherVPN automatically on system boot</div>
+              <div className="text-xs font-semibold text-white">Kill Switch</div>
+              <p className="text-[11px] text-neutral-400 leading-tight mt-0.5">
+                Block all traffic if VPN connection drops
+              </p>
             </div>
             <button
-              onClick={() => handleUpdate('startOnBoot', !settings.startOnBoot)}
-              className={`w-10 h-6 rounded-full transition-colors relative cursor-pointer ${
-                settings.startOnBoot ? 'bg-cyan-600' : 'bg-slate-800'
+              onClick={() => toggleKillSwitch(!settings.killSwitchEnabled)}
+              className={`w-11 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-200 shrink-0 ${
+                settings.killSwitchEnabled ? 'bg-white' : 'bg-neutral-800'
               }`}
             >
               <div
-                className={`w-5 h-5 rounded-full bg-white transition-transform duration-150 absolute top-0.5 ${
-                  settings.startOnBoot ? 'left-4.5' : 'left-0.5'
+                className={`w-4 h-4 rounded-full transition-transform duration-200 shadow-md ${
+                  settings.killSwitchEnabled ? 'bg-black translate-x-5' : 'bg-neutral-400 translate-x-0'
                 }`}
               />
             </button>
           </div>
 
-          <div className="py-3 flex items-center justify-between">
+          {/* DNS Leak Protection */}
+          <div className="flex items-center justify-between gap-3 pt-2.5 border-t border-white/10">
             <div>
-              <div className="text-slate-200 font-semibold">Minimize to System Tray</div>
-              <div className="text-slate-400 text-[11px]">Keep active in background when window is closed</div>
+              <div className="text-xs font-semibold text-white">DNS Leak Protection</div>
+              <p className="text-[11px] text-neutral-400 leading-tight mt-0.5">
+                Enforce encrypted DNS over HTTPS (Cloudflare 1.1.1.1)
+              </p>
             </div>
             <button
-              onClick={() => handleUpdate('minimizeToTray', !settings.minimizeToTray)}
-              className={`w-10 h-6 rounded-full transition-colors relative cursor-pointer ${
-                settings.minimizeToTray ? 'bg-cyan-600' : 'bg-slate-800'
+              onClick={() => handleToggle('dnsLeakProtection', !settings.dnsLeakProtection)}
+              className={`w-11 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-200 shrink-0 ${
+                settings.dnsLeakProtection ? 'bg-white' : 'bg-neutral-800'
               }`}
             >
               <div
-                className={`w-5 h-5 rounded-full bg-white transition-transform duration-150 absolute top-0.5 ${
-                  settings.minimizeToTray ? 'left-4.5' : 'left-0.5'
+                className={`w-4 h-4 rounded-full transition-transform duration-200 shadow-md ${
+                  settings.dnsLeakProtection ? 'bg-black translate-x-5' : 'bg-neutral-400 translate-x-0'
                 }`}
               />
             </button>
           </div>
 
-          <div className="py-3 flex items-center justify-between">
+          {/* IPv6 Control / Leak Prevention */}
+          <div className="flex items-center justify-between gap-3 pt-2.5 border-t border-white/10">
             <div>
-              <div className="text-slate-200 font-semibold">Start Minimized</div>
-              <div className="text-slate-400 text-[11px]">Launch silently into system tray on boot</div>
+              <div className="text-xs font-semibold text-white">Disable IPv6 on VPN</div>
+              <p className="text-[11px] text-neutral-400 leading-tight mt-0.5">
+                Stops ISP IPv6 leaks and connection timeouts
+              </p>
             </div>
             <button
-              onClick={() => handleUpdate('startMinimized', !settings.startMinimized)}
-              className={`w-10 h-6 rounded-full transition-colors relative cursor-pointer ${
-                settings.startMinimized ? 'bg-cyan-600' : 'bg-slate-800'
+              onClick={() => handleToggle('enableIpv6', !settings.enableIpv6)}
+              className={`w-11 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-200 shrink-0 ${
+                !settings.enableIpv6 ? 'bg-white' : 'bg-neutral-800'
               }`}
             >
               <div
-                className={`w-5 h-5 rounded-full bg-white transition-transform duration-150 absolute top-0.5 ${
-                  settings.startMinimized ? 'left-4.5' : 'left-0.5'
+                className={`w-4 h-4 rounded-full transition-transform duration-200 shadow-md ${
+                  !settings.enableIpv6 ? 'bg-black translate-x-5' : 'bg-neutral-400 translate-x-0'
                 }`}
               />
             </button>
           </div>
         </div>
-      </div>
 
-      {/* Networking & Engine Defaults */}
-      <div className="glass-panel rounded-2xl p-6 border border-slate-800/80 space-y-4">
-        <h3 className="font-bold text-sm text-white flex items-center gap-2">
-          <Wifi className="w-4 h-4 text-cyan-400" />
-          <span>Networking & Engine Defaults</span>
-        </h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-          <div>
-            <label className="block text-slate-400 mb-1 font-semibold uppercase text-[11px]">
-              Default Connection Mode
-            </label>
-            <select
-              value={settings.defaultMode}
-              onChange={(e) => handleUpdate('defaultMode', e.target.value as OperatingMode)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500"
-            >
-              <option value="tun">TUN Virtual Network Interface (Full Device Routing)</option>
-              <option value="system_proxy">System Proxy (HTTP & SOCKS5 Hook)</option>
-            </select>
+        {/* Operating Mode Card */}
+        <div className="p-4 rounded-2xl bg-[#0d0d0d] border border-white/10 shadow-lg space-y-3">
+          <div className="flex items-center gap-2 text-xs font-bold text-neutral-300 uppercase tracking-wider">
+            <Radio className="w-3.5 h-3.5 text-white" />
+            <span>Default Operating Mode</span>
           </div>
 
-          <div>
-            <label className="block text-slate-400 mb-1 font-semibold uppercase text-[11px]">
-              Interface MTU
-            </label>
-            <input
-              type="number"
-              value={settings.mtu}
-              onChange={(e) => handleUpdate('mtu', parseInt(e.target.value) || 9000)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-cyan-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-slate-400 mb-1 font-semibold uppercase text-[11px]">
-              Handshake Timeout (seconds)
-            </label>
-            <input
-              type="number"
-              value={settings.connectionTimeoutSecs}
-              onChange={(e) =>
-                handleUpdate('connectionTimeoutSecs', parseInt(e.target.value) || 15)
-              }
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-cyan-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-slate-400 mb-1 font-semibold uppercase text-[11px]">
-              Clash REST API Port
-            </label>
-            <input
-              type="number"
-              value={settings.clashApiPort}
-              onChange={(e) =>
-                handleUpdate('clashApiPort', parseInt(e.target.value) || 9090)
-              }
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-cyan-500"
-            />
-          </div>
-        </div>
-
-        <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-xs">
-          <div>
-            <div className="text-slate-200 font-semibold">Automatic Reconnect</div>
-            <div className="text-slate-400 text-[11px]">Re-establish tunnel if network fluctuates or drops</div>
-          </div>
-          <button
-            onClick={() => handleUpdate('autoReconnect', !settings.autoReconnect)}
-            className={`w-10 h-6 rounded-full transition-colors relative cursor-pointer ${
-              settings.autoReconnect ? 'bg-cyan-600' : 'bg-slate-800'
-            }`}
-          >
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            {/* TUN Mode */}
             <div
-              className={`w-5 h-5 rounded-full bg-white transition-transform duration-150 absolute top-0.5 ${
-                settings.autoReconnect ? 'left-4.5' : 'left-0.5'
+              onClick={() => updateOperatingMode('tun')}
+              className={`p-3 rounded-xl border cursor-pointer transition-all ${
+                settings.defaultMode === 'tun'
+                  ? 'bg-neutral-900 border-white text-white shadow-md shadow-black'
+                  : 'bg-black border-white/10 text-neutral-400 hover:border-white/30'
               }`}
-            />
-          </button>
+            >
+              <div className="font-bold flex items-center gap-1.5">
+                <Radio className="w-3.5 h-3.5 text-white" />
+                <span>VPN (TUN)</span>
+              </div>
+              <p className="text-[10px] text-neutral-400 mt-1 leading-tight">
+                Virtual adapter routing all apps & games
+              </p>
+            </div>
+
+            {/* Proxy Mode */}
+            <div
+              onClick={() => updateOperatingMode('system_proxy')}
+              className={`p-3 rounded-xl border cursor-pointer transition-all ${
+                settings.defaultMode === 'system_proxy'
+                  ? 'bg-neutral-900 border-white text-white shadow-md shadow-black'
+                  : 'bg-black border-white/10 text-neutral-400 hover:border-white/30'
+              }`}
+            >
+              <div className="font-bold flex items-center gap-1.5">
+                <Globe className="w-3.5 h-3.5 text-white" />
+                <span>System Proxy</span>
+              </div>
+              <p className="text-[10px] text-neutral-400 mt-1 leading-tight">
+                HTTP & SOCKS5 proxy via Windows settings
+              </p>
+            </div>
+          </div>
         </div>
-      </div>
 
-      {/* Security & Leak Shield */}
-      <div className="glass-panel rounded-2xl p-6 border border-slate-800/80 space-y-4">
-        <h3 className="font-bold text-sm text-white flex items-center gap-2">
-          <Shield className="w-4 h-4 text-cyan-400" />
-          <span>Security & Leak Hardening</span>
-        </h3>
+        {/* General App Preferences */}
+        <div className="p-4 rounded-2xl bg-[#0d0d0d] border border-white/10 shadow-lg space-y-3">
+          <div className="flex items-center gap-2 text-xs font-bold text-neutral-300 uppercase tracking-wider">
+            <Zap className="w-3.5 h-3.5 text-white" />
+            <span>Connection & App</span>
+          </div>
 
-        <div className="divide-y divide-slate-800/60 text-xs">
-          <div className="py-3 flex items-center justify-between">
+          {/* Auto Reconnect */}
+          <div className="flex items-center justify-between gap-3">
             <div>
-              <div className="text-slate-200 font-semibold">Firewall Kill Switch</div>
-              <div className="text-slate-400 text-[11px]">
-                Drop non-VPN outbound traffic via OS packet filter if connection drops unexpectedly
-              </div>
+              <div className="text-xs font-semibold text-white">Auto Reconnect</div>
+              <p className="text-[11px] text-neutral-400 mt-0.5">
+                Automatically restore tunnel if disconnected
+              </p>
             </div>
             <button
-              onClick={() => handleUpdate('killSwitchEnabled', !settings.killSwitchEnabled)}
-              className={`w-10 h-6 rounded-full transition-colors relative cursor-pointer ${
-                settings.killSwitchEnabled ? 'bg-amber-500' : 'bg-slate-800'
+              onClick={() => handleToggle('autoReconnect', !settings.autoReconnect)}
+              className={`w-11 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-200 shrink-0 ${
+                settings.autoReconnect ? 'bg-white' : 'bg-neutral-800'
               }`}
             >
               <div
-                className={`w-5 h-5 rounded-full bg-white transition-transform duration-150 absolute top-0.5 ${
-                  settings.killSwitchEnabled ? 'left-4.5' : 'left-0.5'
+                className={`w-4 h-4 rounded-full transition-transform duration-200 shadow-md ${
+                  settings.autoReconnect ? 'bg-black translate-x-5' : 'bg-neutral-400 translate-x-0'
                 }`}
               />
             </button>
           </div>
 
-          <div className="py-3 flex items-center justify-between">
+          {/* Start on Boot */}
+          <div className="flex items-center justify-between gap-3 pt-2.5 border-t border-white/10">
             <div>
-              <div className="text-slate-200 font-semibold">DNS Leak Protection</div>
-              <div className="text-slate-400 text-[11px]">
-                Force all resolver packets exclusively through encrypted DoH/DoT upstream
-              </div>
+              <div className="text-xs font-semibold text-white">Start on Boot</div>
+              <p className="text-[11px] text-neutral-400 mt-0.5">
+                Launch AetherVPN when Windows starts
+              </p>
             </div>
             <button
-              onClick={() => handleUpdate('dnsLeakProtection', !settings.dnsLeakProtection)}
-              className={`w-10 h-6 rounded-full transition-colors relative cursor-pointer ${
-                settings.dnsLeakProtection ? 'bg-cyan-600' : 'bg-slate-800'
+              onClick={() => handleToggle('startOnBoot', !settings.startOnBoot)}
+              className={`w-11 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-200 shrink-0 ${
+                settings.startOnBoot ? 'bg-white' : 'bg-neutral-800'
               }`}
             >
               <div
-                className={`w-5 h-5 rounded-full bg-white transition-transform duration-150 absolute top-0.5 ${
-                  settings.dnsLeakProtection ? 'left-4.5' : 'left-0.5'
+                className={`w-4 h-4 rounded-full transition-transform duration-200 shadow-md ${
+                  settings.startOnBoot ? 'bg-black translate-x-5' : 'bg-neutral-400 translate-x-0'
                 }`}
               />
             </button>
           </div>
+
+          {/* Minimize to Tray */}
+          <div className="flex items-center justify-between gap-3 pt-2.5 border-t border-white/10">
+            <div>
+              <div className="text-xs font-semibold text-white">Minimize to System Tray</div>
+              <p className="text-[11px] text-neutral-400 mt-0.5">
+                Keep running in background when closed
+              </p>
+            </div>
+            <button
+              onClick={() => handleToggle('minimizeToTray', !settings.minimizeToTray)}
+              className={`w-11 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-200 shrink-0 ${
+                settings.minimizeToTray ? 'bg-white' : 'bg-neutral-800'
+              }`}
+            >
+              <div
+                className={`w-4 h-4 rounded-full transition-transform duration-200 shadow-md ${
+                  settings.minimizeToTray ? 'bg-black translate-x-5' : 'bg-neutral-400 translate-x-0'
+                }`}
+              />
+            </button>
+          </div>
+        </div>
+
+        {/* Diagnostic Logs Shortcut */}
+        <div
+          onClick={() => setActiveTab('logs')}
+          className="flex items-center justify-between p-3.5 rounded-2xl bg-[#0d0d0d] hover:bg-[#161616] border border-white/10 text-xs font-medium text-neutral-300 hover:text-white cursor-pointer transition-all"
+        >
+          <div className="flex items-center gap-2.5">
+            <Terminal className="w-4 h-4 text-white" />
+            <span>Open Connection Logs</span>
+          </div>
+          <span className="text-neutral-500 text-xs">&rarr;</span>
+        </div>
+
+        {/* Footer Brand Info */}
+        <div className="pt-2 pb-4 text-center text-neutral-500 text-[11px]">
+          <p className="font-semibold text-neutral-400">AetherVPN v0.1.0</p>
+          <p className="text-[10px] mt-0.5 text-neutral-500">Secure &bull; Encrypted &bull; Private</p>
         </div>
       </div>
     </div>
