@@ -107,13 +107,14 @@ pub fn run() {
             Ok(())
         })
         .on_window_event(|window, event| {
-            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
-                let db_state = window.state::<Database>();
-                let should_minimize = db_state.get_settings().map(|s| s.minimize_to_tray).unwrap_or(false);
-                if should_minimize {
-                    api.prevent_close();
-                    let _ = window.hide();
-                }
+            if let tauri::WindowEvent::CloseRequested { .. } = event {
+                let conn_mgr = window.state::<ConnectionManager>();
+                let mgr = conn_mgr.inner().clone();
+                tauri::async_runtime::block_on(async move {
+                    let _ = mgr.disconnect().await;
+                });
+                let app = window.app_handle().clone();
+                app.exit(0);
             }
         })
         .manage(db)

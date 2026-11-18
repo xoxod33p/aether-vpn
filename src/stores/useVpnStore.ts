@@ -18,7 +18,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   theme: 'dark',
   language: 'en-US',
   startOnBoot: false,
-  minimizeToTray: true,
+  minimizeToTray: false,
   startMinimized: false,
   defaultMode: 'tun',
   autoReconnect: true,

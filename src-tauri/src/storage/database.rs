@@ -165,7 +165,7 @@ impl Database {
                     id, theme, language, start_on_boot, minimize_to_tray, start_minimized,
                     default_mode, auto_reconnect, connection_timeout_secs, kill_switch_enabled,
                     dns_leak_protection, mtu, enable_ipv6, socks_port, http_port, clash_api_port
-                ) VALUES (1, 'dark', 'en-US', 0, 1, 0, 'tun', 1, 15, 0, 1, 9000, 0, 2080, 2081, 9090)",
+                ) VALUES (1, 'dark', 'en-US', 0, 0, 0, 'tun', 1, 15, 0, 1, 9000, 0, 2080, 2081, 9090)",
                 [],
             )?;
         }

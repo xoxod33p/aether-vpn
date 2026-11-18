@@ -6,6 +6,7 @@ import { AppsPage } from './pages/AppsPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { LogsPage } from './pages/LogsPage';
 import { LoadingSplash } from './components/common/LoadingSplash';
+import { UpdateModal } from './components/common/UpdateModal';
 import {
   Shield,
   Server,
@@ -23,6 +24,7 @@ export function App() {
   const { activeTab, setActiveTab, connectionInfo, profiles } = store;
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
   const [dismissedUpdate, setDismissedUpdate] = useState(false);
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -30,6 +32,7 @@ export function App() {
       .then((info) => {
         if (mounted && info && info.isUpdateAvailable) {
           setUpdateInfo(info);
+          setIsUpdateModalOpen(true);
         }
       })
       .catch(() => {});
@@ -50,7 +53,16 @@ export function App() {
       case 'apps':
         return <AppsPage store={store} />;
       case 'settings':
-        return <SettingsPage store={store} initialUpdateInfo={updateInfo} />;
+        return (
+          <SettingsPage
+            store={store}
+            initialUpdateInfo={updateInfo}
+            onOpenUpdateModal={(info) => {
+              setUpdateInfo(info);
+              setIsUpdateModalOpen(true);
+            }}
+          />
+        );
       case 'logs':
         return <LogsPage store={store} />;
       default:
@@ -103,7 +115,7 @@ export function App() {
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setActiveTab('settings')}
+              onClick={() => setIsUpdateModalOpen(true)}
               className="px-2 py-0.5 rounded-lg bg-white text-black font-bold text-[11px] hover:bg-neutral-200 transition-all cursor-pointer flex items-center gap-1"
             >
               <span>View Update</span>
@@ -156,6 +168,14 @@ export function App() {
           );
         })}
       </nav>
+
+      {updateInfo && (
+        <UpdateModal
+          updateInfo={updateInfo}
+          isOpen={isUpdateModalOpen && Boolean(updateInfo.isUpdateAvailable)}
+          onClose={() => setIsUpdateModalOpen(false)}
+        />
+      )}
     </div>
   );
 }

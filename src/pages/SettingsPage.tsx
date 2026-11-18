@@ -22,9 +22,10 @@ import { vpnApi } from '../services/tauriApi';
 interface SettingsPageProps {
   store: VpnStoreType;
   initialUpdateInfo?: UpdateInfo | null;
+  onOpenUpdateModal?: (info: UpdateInfo) => void;
 }
 
-export const SettingsPage: React.FC<SettingsPageProps> = ({ store, initialUpdateInfo }) => {
+export const SettingsPage: React.FC<SettingsPageProps> = ({ store, initialUpdateInfo, onOpenUpdateModal }) => {
   const { settings, setSettings, toggleKillSwitch, updateOperatingMode, setActiveTab } = store;
   const [savedSuccess, setSavedSuccess] = useState(false);
 
@@ -64,9 +65,11 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ store, initialUpdate
     try {
       const info = await vpnApi.checkForUpdates();
       setUpdateInfo(info);
-      if (!info.isUpdateAvailable) {
-        setUpdateStatus('You are running the latest version.');
-        setTimeout(() => setUpdateStatus(null), 3000);
+      if (info.isUpdateAvailable) {
+        onOpenUpdateModal?.(info);
+      } else {
+        setUpdateStatus(`You are running the latest version (v${info.currentVersion}).`);
+        setTimeout(() => setUpdateStatus(null), 3500);
       }
     } catch (e: any) {
       setUpdateStatus(e.message || 'Check failed.');
@@ -316,27 +319,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ store, initialUpdate
               <div
                 className={`w-4 h-4 rounded-full transition-transform duration-200 shadow-md ${
                   settings.startOnBoot ? 'bg-black translate-x-5' : 'bg-neutral-400 translate-x-0'
-                }`}
-              />
-            </button>
-          </div>
-
-          <div className="flex items-center justify-between gap-3 pt-2.5 border-t border-white/10">
-            <div>
-              <div className="text-xs font-semibold text-white">Minimize to System Tray</div>
-              <p className="text-[11px] text-neutral-400 mt-0.5">
-                Keep running in background when closed
-              </p>
-            </div>
-            <button
-              onClick={() => handleToggle('minimizeToTray', !settings.minimizeToTray)}
-              className={`w-11 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-200 shrink-0 ${
-                settings.minimizeToTray ? 'bg-white' : 'bg-neutral-800'
-              }`}
-            >
-              <div
-                className={`w-4 h-4 rounded-full transition-transform duration-200 shadow-md ${
-                  settings.minimizeToTray ? 'bg-black translate-x-5' : 'bg-neutral-400 translate-x-0'
                 }`}
               />
             </button>

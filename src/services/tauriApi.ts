@@ -197,16 +197,33 @@ export const vpnApi = {
   },
 
   checkForUpdates: async (): Promise<UpdateInfo> => {
-    return safeInvoke<UpdateInfo>('check_for_updates', {}, {
-      currentVersion: '0.1.4',
-      latestVersion: '0.1.4',
-      isUpdateAvailable: false,
-      releaseName: 'AetherVPN v0.1.4',
-      releaseNotes: '',
-      publishedAt: new Date().toISOString(),
-      releaseUrl: 'https://github.com/xoxod33p/aether-vpn/releases',
-      platform: typeof navigator !== 'undefined' && navigator.userAgent.includes('Linux') ? 'linux' : 'windows',
-    });
+    const raw = await safeInvoke<any>('check_for_updates', {}, null);
+    if (!raw) {
+      return {
+        currentVersion: '0.1.5',
+        latestVersion: '0.1.5',
+        isUpdateAvailable: false,
+        releaseName: 'AetherVPN',
+        releaseNotes: '',
+        publishedAt: new Date().toISOString(),
+        releaseUrl: 'https://github.com/xoxod33p/aether-vpn/releases',
+        platform: typeof navigator !== 'undefined' && navigator.userAgent.includes('Linux') ? 'linux' : 'windows',
+      };
+    }
+    const isAvail = Boolean(raw.isUpdateAvailable ?? raw.is_update_available);
+    return {
+      currentVersion: raw.currentVersion || raw.current_version || '0.1.5',
+      latestVersion: raw.latestVersion || raw.latest_version || '0.1.5',
+      isUpdateAvailable: isAvail,
+      releaseName: raw.releaseName || raw.release_name || `AetherVPN v${raw.latestVersion || raw.latest_version}`,
+      releaseNotes: raw.releaseNotes || raw.release_notes || '',
+      publishedAt: raw.publishedAt || raw.published_at || '',
+      releaseUrl: raw.releaseUrl || raw.release_url || 'https://github.com/xoxod33p/aether-vpn/releases',
+      downloadUrl: raw.downloadUrl || raw.download_url,
+      assetName: raw.assetName || raw.asset_name,
+      assetSize: raw.assetSize || raw.asset_size,
+      platform: raw.platform || (typeof navigator !== 'undefined' && navigator.userAgent.includes('Linux') ? 'linux' : 'windows'),
+    };
   },
 
   downloadAndInstallUpdate: async (downloadUrl: string): Promise<string> => {
