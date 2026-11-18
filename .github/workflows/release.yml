@@ -66,7 +66,7 @@ jobs:
           }
 
           Write-Host "Target build version: $finalVer"
-          "version=$finalVer" >> $env:GITHUB_OUTPUT
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "version=$finalVer"
 
   build-tauri:
     needs: resolve-version
@@ -92,20 +92,25 @@ jobs:
           $ver = "${{ needs.resolve-version.outputs.version }}"
           Write-Host "Configuring build for version: $ver"
           
-          $tPath = "src-tauri/tauri.conf.json"
-          $tJson = Get-Content $tPath -Raw | ConvertFrom-Json
-          $tJson.version = $ver
-          $tJson | ConvertTo-Json -Depth 10 | Set-Content $tPath
+          $tPath = (Resolve-Path "src-tauri/tauri.conf.json").Path
+          $tRaw = Get-Content $tPath -Raw
+          $tRaw = $tRaw -replace '"version"\s*:\s*"[^"]+"', "`"version`": `"$ver`""
+          Set-Content -Path $tPath -Value $tRaw -NoNewline
 
-          $pPath = "package.json"
-          $pJson = Get-Content $pPath -Raw | ConvertFrom-Json
-          $pJson.version = $ver
-          $pJson | ConvertTo-Json -Depth 10 | Set-Content $pPath
+          $pPath = (Resolve-Path "package.json").Path
+          $pRaw = Get-Content $pPath -Raw
+          $pRaw = $pRaw -replace '"version"\s*:\s*"[^"]+"', "`"version`": `"$ver`""
+          Set-Content -Path $pPath -Value $pRaw -NoNewline
 
-          $cPath = "src-tauri/Cargo.toml"
-          $cRaw = Get-Content $cPath -Raw
-          $cRaw = $cRaw -replace 'version\s*=\s*"[^"]+"', "version = `"$ver`""
-          Set-Content -Path $cPath -Value $cRaw
+          $cPath = (Resolve-Path "src-tauri/Cargo.toml").Path
+          $lines = Get-Content $cPath
+          for ($idx = 0; $idx -lt $lines.Length; $idx++) {
+            if ($lines[$idx] -match '^version\s*=') {
+              $lines[$idx] = "version = `"$ver`""
+              break
+            }
+          }
+          $lines | Set-Content -Path $cPath
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
