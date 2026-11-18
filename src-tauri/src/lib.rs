@@ -145,6 +145,9 @@ pub fn run() {
             clear_logs,
             get_real_public_ip,
             run_dns_leak_test,
+            check_for_updates,
+            download_and_install_update,
+            backup_database,
         ])
         .run(tauri::generate_context!())
         .expect("error while running AetherVPN application");

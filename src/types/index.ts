@@ -158,3 +158,17 @@ export interface AppUsage {
   destinationHosts: string[];
   lastSeen: string;
 }
+
+export interface UpdateInfo {
+  currentVersion: string;
+  latestVersion: string;
+  isUpdateAvailable: boolean;
+  releaseName: string;
+  releaseNotes: string;
+  publishedAt: string;
+  releaseUrl: string;
+  downloadUrl?: string;
+  assetName?: string;
+  assetSize?: number;
+  platform: 'windows' | 'linux' | string;
+}

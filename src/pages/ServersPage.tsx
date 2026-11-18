@@ -16,6 +16,7 @@ import {
   ChevronRight,
   Shield,
   Network,
+  Cloud,
 } from 'lucide-react';
 import { Profile, VpnProtocol } from '../types';
 import { VpnStoreType } from '../stores/useVpnStore';
@@ -325,6 +326,15 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
         </div>
 
         <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => setActiveTab('settings')}
+            title="Sync Free Servers from Cloud Backend"
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-[#0d0d0d] hover:bg-[#161616] text-neutral-300 text-xs font-medium border border-white/10 transition-all cursor-pointer"
+          >
+            <Cloud className="w-3.5 h-3.5 text-neutral-300" />
+            <span className="hidden sm:inline">Sync</span>
+          </button>
+
           <button
             onClick={handleTestAll}
             disabled={isTestingAll || profiles.length === 0}

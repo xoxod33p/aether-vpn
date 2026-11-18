@@ -1,4 +1,4 @@
-import { Profile, ConnectionInfo, TrafficStats, AppUsage, AppSettings, Subscription, RoutingRule, DnsConfig, LogEntry } from '../types';
+import { Profile, ConnectionInfo, TrafficStats, AppUsage, AppSettings, Subscription, RoutingRule, DnsConfig, LogEntry, UpdateInfo } from '../types';
 
 export const isTauri = (): boolean => {
   return typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
@@ -190,5 +190,26 @@ export const vpnApi = {
 
   minimizeWindow: async (): Promise<void> => {
     return safeInvoke<void>('minimize_window', {});
+  },
+
+  checkForUpdates: async (): Promise<UpdateInfo> => {
+    return safeInvoke<UpdateInfo>('check_for_updates', {}, {
+      currentVersion: '0.1.3',
+      latestVersion: '0.1.3',
+      isUpdateAvailable: false,
+      releaseName: 'AetherVPN v0.1.3',
+      releaseNotes: '',
+      publishedAt: new Date().toISOString(),
+      releaseUrl: 'https://github.com/xoxod33p/aether-vpn/releases',
+      platform: typeof navigator !== 'undefined' && navigator.userAgent.includes('Linux') ? 'linux' : 'windows',
+    });
+  },
+
+  downloadAndInstallUpdate: async (downloadUrl: string): Promise<string> => {
+    return safeInvoke<string>('download_and_install_update', { downloadUrl }, 'Update download initiated.');
+  },
+
+  backupDatabase: async (): Promise<string> => {
+    return safeInvoke<string>('backup_database', {}, 'Database backup created.');
   },
 };
