@@ -4,9 +4,6 @@ import {
   ArrowDown,
   ArrowUp,
   Clock,
-  Shield,
-  ShieldAlert,
-  Activity,
   Globe,
   Radio,
   ChevronRight,
@@ -63,7 +60,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
         />
       </div>
 
-      <div className="flex items-center justify-between gap-2 pt-1 z-10">
+      <div className="flex items-center justify-center pt-1 z-10">
         <div className="flex items-center bg-[#0d0d0d] p-1 rounded-xl border border-white/10 shadow-inner">
           <button
             onClick={() => updateOperatingMode('tun')}
@@ -87,20 +84,6 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
             <Globe className="w-3 h-3" />
             <span>Proxy</span>
           </button>
-        </div>
-
-        <div
-          onClick={() => setActiveTab('settings')}
-          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#0d0d0d] border border-white/10 text-xs font-medium cursor-pointer hover:border-white/30 transition-all"
-        >
-          {settings.killSwitchEnabled ? (
-            <ShieldAlert className="w-3.5 h-3.5 text-neutral-200" />
-          ) : (
-            <Shield className="w-3.5 h-3.5 text-neutral-200" />
-          )}
-          <span className="text-[11px] text-neutral-300 font-mono">
-            {settings.killSwitchEnabled ? 'Kill Switch' : 'Protected'}
-          </span>
         </div>
       </div>
 
@@ -213,7 +196,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
         </div>
 
         {isConnected && (
-          <div className="w-full grid grid-cols-4 gap-2 mt-5 p-3 rounded-2xl bg-[#0d0d0d] border border-white/10 shadow-xl">
+          <div className="w-full grid grid-cols-3 gap-3 mt-5 p-3 rounded-2xl bg-[#0d0d0d] border border-white/10 shadow-xl">
             <div className="flex flex-col items-center">
               <div className="flex items-center gap-1 text-[10px] text-neutral-400 uppercase font-semibold">
                 <ArrowDown className="w-3 h-3 text-white" />
@@ -231,16 +214,6 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
               </div>
               <div className="text-xs font-mono font-bold text-white mt-0.5 truncate">
                 {formatSpeed(trafficStats.uploadSpeedBps)}
-              </div>
-            </div>
-
-            <div className="flex flex-col items-center">
-              <div className="flex items-center gap-1 text-[10px] text-neutral-400 uppercase font-semibold">
-                <Activity className="w-3 h-3 text-neutral-300" />
-                <span>Ping</span>
-              </div>
-              <div className="text-xs font-mono font-bold text-white mt-0.5">
-                {trafficStats.latencyMs ? `${trafficStats.latencyMs} ms` : '--'}
               </div>
             </div>
 

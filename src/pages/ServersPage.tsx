@@ -40,6 +40,8 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
     connect,
   } = store;
 
+  const isVpnConnected = connectionInfo.status === 'Connected' || connectionInfo.status === 'Connecting';
+
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingProfile, setEditingProfile] = useState<Profile | null>(null);
@@ -162,6 +164,9 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
   };
 
   const handleOpenEdit = (profile: Profile) => {
+    if (isVpnConnected) {
+      return;
+    }
     setEditingProfile(profile);
     setAddMode('manual');
     setImportText('');
@@ -274,6 +279,10 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
     };
 
     if (editingProfile) {
+      if (isVpnConnected) {
+        setImportError('Cannot edit server configuration while VPN is connected. Please disconnect first.');
+        return;
+      }
       const updatedProfile: Profile = {
         ...editingProfile,
         ...baseData,
@@ -450,10 +459,16 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
+                      if (isVpnConnected) return;
                       handleOpenEdit(profile);
                     }}
-                    title="Edit Server"
-                    className="p-1 text-neutral-600 hover:text-white transition-colors cursor-pointer"
+                    disabled={isVpnConnected}
+                    title={isVpnConnected ? 'Cannot edit server while VPN is connected' : 'Edit Server'}
+                    className={`p-1 transition-colors ${
+                      isVpnConnected
+                        ? 'text-neutral-700 cursor-not-allowed opacity-40'
+                        : 'text-neutral-600 hover:text-white cursor-pointer'
+                    }`}
                   >
                     <Pencil className="w-3.5 h-3.5" />
                   </button>
@@ -461,9 +476,22 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
+                      if (isVpnConnected && (profile.id === connectionInfo.activeProfileId || profile.id === selectedProfileId)) {
+                        return;
+                      }
                       deleteProfile(profile.id);
                     }}
-                    className="p-1 text-neutral-600 hover:text-red-400 transition-colors cursor-pointer"
+                    disabled={isVpnConnected && (profile.id === connectionInfo.activeProfileId || profile.id === selectedProfileId)}
+                    title={
+                      isVpnConnected && (profile.id === connectionInfo.activeProfileId || profile.id === selectedProfileId)
+                        ? 'Cannot delete active server while VPN is connected'
+                        : 'Delete Server'
+                    }
+                    className={`p-1 transition-colors ${
+                      isVpnConnected && (profile.id === connectionInfo.activeProfileId || profile.id === selectedProfileId)
+                        ? 'text-neutral-700 cursor-not-allowed opacity-40'
+                        : 'text-neutral-600 hover:text-red-400 cursor-pointer'
+                    }`}
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
@@ -501,6 +529,13 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                 <X className="w-4 h-4" />
               </button>
             </div>
+
+            {isVpnConnected && editingProfile && (
+              <div className="flex items-center gap-2 p-3 bg-red-950/40 border border-red-500/30 rounded-xl text-xs text-red-300 my-2 shrink-0">
+                <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
+                <span>Disconnect VPN before modifying server configurations.</span>
+              </div>
+            )}
 
             {!editingProfile && (
               <div className="flex bg-black p-1 rounded-xl border border-white/10 my-3 text-xs shrink-0">
@@ -1077,9 +1112,18 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
               <div className="pt-3 border-t border-white/10 shrink-0">
                 <button
                   onClick={handleManualSave}
-                  className="w-full py-2.5 rounded-xl bg-white hover:bg-neutral-200 text-black font-bold text-xs shadow-md transition-all cursor-pointer"
+                  disabled={isVpnConnected && !!editingProfile}
+                  className={`w-full py-2.5 rounded-xl font-bold text-xs shadow-md transition-all ${
+                    isVpnConnected && editingProfile
+                      ? 'bg-neutral-800 text-neutral-500 cursor-not-allowed border border-white/5'
+                      : 'bg-white hover:bg-neutral-200 text-black cursor-pointer'
+                  }`}
                 >
-                  {editingProfile ? 'Save Changes' : 'Save Profile'}
+                  {isVpnConnected && editingProfile
+                    ? 'Cannot Save While Connected'
+                    : editingProfile
+                    ? 'Save Changes'
+                    : 'Save Profile'}
                 </button>
               </div>
             )}

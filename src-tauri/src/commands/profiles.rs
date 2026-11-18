@@ -2,7 +2,8 @@ use std::time::Duration;
 use tauri::State;
 use tracing::{info, warn};
 
-use crate::models::Profile;
+use crate::models::{Profile, ConnectionStatus};
+use crate::core::ConnectionManager;
 use crate::network::{LatencyTester, SubscriptionParser};
 use crate::storage::Database;
 
@@ -12,13 +13,33 @@ pub async fn get_profiles(db: State<'_, Database>) -> Result<Vec<Profile>, Strin
 }
 
 #[tauri::command]
-pub async fn save_profile(profile: Profile, db: State<'_, Database>) -> Result<Profile, String> {
+pub async fn save_profile(
+    profile: Profile,
+    db: State<'_, Database>,
+    conn_mgr: State<'_, ConnectionManager>,
+) -> Result<Profile, String> {
+    let status = conn_mgr.get_status();
+    if (status.status == ConnectionStatus::Connected || status.status == ConnectionStatus::Connecting)
+        && status.active_profile_id.as_deref() == Some(&profile.id)
+    {
+        return Err("Cannot edit active server configuration while VPN is connected. Please disconnect first.".to_string());
+    }
     db.save_profile(&profile).map_err(|e| e.to_string())?;
     Ok(profile)
 }
 
 #[tauri::command]
-pub async fn delete_profile(id: String, db: State<'_, Database>) -> Result<(), String> {
+pub async fn delete_profile(
+    id: String,
+    db: State<'_, Database>,
+    conn_mgr: State<'_, ConnectionManager>,
+) -> Result<(), String> {
+    let status = conn_mgr.get_status();
+    if (status.status == ConnectionStatus::Connected || status.status == ConnectionStatus::Connecting)
+        && status.active_profile_id.as_deref() == Some(&id)
+    {
+        return Err("Cannot delete active server configuration while VPN is connected. Please disconnect first.".to_string());
+    }
     db.delete_profile(&id).map_err(|e| e.to_string())
 }
 
