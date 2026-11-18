@@ -10,7 +10,6 @@ import {
   Check,
   Power,
   RotateCcw,
-  Minus,
 } from 'lucide-react';
 import { AppSettings, OperatingMode } from '../types';
 import { VpnStoreType } from '../stores/useVpnStore';
@@ -43,21 +42,12 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ store }) => {
           <h2 className="text-base font-bold text-white">Settings</h2>
         </div>
 
-        <div className="flex items-center gap-1.5">
-          {savedSuccess && (
-            <div className="flex items-center gap-1 text-[11px] font-semibold text-neutral-200 bg-white/10 px-2 py-0.5 rounded-md border border-white/20 animate-fade">
-              <Check className="w-3 h-3" />
-              <span>Saved</span>
-            </div>
-          )}
-          <button
-            onClick={() => vpnApi.minimizeWindow()}
-            title="Minimize to toolbar"
-            className="p-1.5 rounded-xl bg-[#0d0d0d] hover:bg-[#161616] text-neutral-400 hover:text-white border border-white/10 transition-all cursor-pointer shrink-0"
-          >
-            <Minus className="w-3.5 h-3.5" />
-          </button>
-        </div>
+        {savedSuccess && (
+          <div className="flex items-center gap-1 text-[11px] font-semibold text-neutral-200 bg-white/10 px-2 py-0.5 rounded-md border border-white/20 animate-fade">
+            <Check className="w-3 h-3" />
+            <span>Saved</span>
+          </div>
+        )}
       </div>
 
       <div className="space-y-4">

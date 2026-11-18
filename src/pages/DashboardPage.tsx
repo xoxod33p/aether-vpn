@@ -9,7 +9,6 @@ import {
   ChevronRight,
   AlertCircle,
   MapPin,
-  Minus,
 } from 'lucide-react';
 import { VpnStoreType } from '../stores/useVpnStore';
 import { vpnApi } from '../services/tauriApi';
@@ -55,15 +54,14 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
         <img
           src="/logo.png"
           alt=""
-          className="w-64 h-64 sm:w-72 sm:h-72 object-contain opacity-[0.06] blur-[0.5px] scale-110"
+          className="w-72 h-72 sm:w-80 sm:h-80 object-contain opacity-25 -translate-y-12 scale-105"
           onError={(e) => {
             (e.target as HTMLImageElement).style.display = 'none';
           }}
         />
       </div>
 
-      <div className="flex items-center justify-between pt-1 z-10">
-        <div className="w-8" />
+      <div className="flex items-center justify-center pt-1 z-10">
         <div className="flex items-center bg-[#0d0d0d] p-1 rounded-xl border border-white/10 shadow-inner">
           <button
             onClick={() => updateOperatingMode('tun')}
@@ -88,13 +86,6 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
             <span>Proxy</span>
           </button>
         </div>
-        <button
-          onClick={() => vpnApi.minimizeWindow()}
-          title="Minimize to toolbar"
-          className="w-8 h-8 rounded-xl bg-[#0d0d0d] hover:bg-[#161616] border border-white/10 flex items-center justify-center text-neutral-400 hover:text-white transition-all cursor-pointer"
-        >
-          <Minus className="w-4 h-4" />
-        </button>
       </div>
 
       <div className="flex flex-col items-center justify-center my-auto py-5 z-10">

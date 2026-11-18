@@ -16,10 +16,8 @@ import {
   Wifi,
   ExternalLink,
   Filter,
-  Minus,
 } from 'lucide-react';
 import { VpnStoreType } from '../stores/useVpnStore';
-import { vpnApi } from '../services/tauriApi';
 import { formatBytes, formatSpeed } from '../utils/formatters';
 
 interface AppsPageProps {
@@ -125,14 +123,6 @@ export const AppsPage: React.FC<AppsPageProps> = ({ store }) => {
               <option value="conns">Active Sockets</option>
             </select>
           </div>
-
-          <button
-            onClick={() => vpnApi.minimizeWindow()}
-            title="Minimize to toolbar"
-            className="p-1.5 rounded-xl bg-[#0d0d0d] hover:bg-[#161616] text-neutral-400 hover:text-white border border-white/10 transition-all cursor-pointer shrink-0"
-          >
-            <Minus className="w-3.5 h-3.5" />
-          </button>
         </div>
       </div>
 

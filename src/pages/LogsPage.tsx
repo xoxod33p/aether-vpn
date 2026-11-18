@@ -7,11 +7,9 @@ import {
   Check,
   ArrowUp,
   X,
-  Minus,
 } from 'lucide-react';
 import { LogEntry } from '../types';
 import { VpnStoreType } from '../stores/useVpnStore';
-import { vpnApi } from '../services/tauriApi';
 
 interface LogsPageProps {
   store: VpnStoreType;
@@ -89,14 +87,6 @@ export const LogsPage: React.FC<LogsPageProps> = ({ store }) => {
           >
             <Trash2 className="w-3.5 h-3.5" />
             <span>Clear</span>
-          </button>
-
-          <button
-            onClick={() => vpnApi.minimizeWindow()}
-            title="Minimize to toolbar"
-            className="p-1.5 rounded-xl bg-[#0d0d0d] hover:bg-[#161616] text-neutral-400 hover:text-white border border-white/10 transition-all cursor-pointer shrink-0"
-          >
-            <Minus className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
