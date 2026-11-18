@@ -6,14 +6,12 @@ import {
   Globe,
   Radio,
   Zap,
-  Terminal,
   Check,
   Power,
   RotateCcw,
   Download,
   RefreshCw,
   ExternalLink,
-  Database,
   Laptop,
   Copy,
 } from 'lucide-react';
@@ -212,10 +210,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ store, initialUpdate
               <Copy className="w-3.5 h-3.5" />
             </button>
           </div>
-
-          <p className="text-[10px] text-neutral-500">
-            Hardware-bound unique identifier for this PC. Each machine generates a distinct permanent ID.
-          </p>
         </div>
 
         <div className="p-4 rounded-2xl bg-[#0d0d0d] border border-white/10 shadow-lg space-y-3.5">
@@ -283,11 +277,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ store, initialUpdate
           {updateStatus && (
             <p className="text-[11px] text-neutral-300 font-mono bg-[#161616] p-2 rounded-lg border border-white/10">{updateStatus}</p>
           )}
-
-          <div className="pt-2 border-t border-white/5 flex items-center gap-1.5 text-[10px] text-neutral-500">
-            <Database className="w-3 h-3 text-neutral-400 shrink-0" />
-            <span>Database persistence guaranteed. Your servers and credentials will never be reset on update.</span>
-          </div>
         </div>
 
         <div className="p-4 rounded-2xl bg-[#0d0d0d] border border-white/10 shadow-lg space-y-3.5">
@@ -352,17 +341,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ store, initialUpdate
               />
             </button>
           </div>
-        </div>
-
-        <div
-          onClick={() => setActiveTab('logs')}
-          className="flex items-center justify-between p-3.5 rounded-2xl bg-[#0d0d0d] hover:bg-[#161616] border border-white/10 text-xs font-medium text-neutral-300 hover:text-white cursor-pointer transition-all"
-        >
-          <div className="flex items-center gap-2.5">
-            <Terminal className="w-4 h-4 text-white" />
-            <span>Open Connection Logs</span>
-          </div>
-          <span className="text-neutral-500 text-xs">&rarr;</span>
         </div>
 
         <div className="pt-2 pb-4 text-center text-neutral-500 text-[11px]">

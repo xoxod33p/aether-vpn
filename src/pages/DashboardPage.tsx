@@ -50,19 +50,16 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
 
   return (
     <div className="flex flex-col h-full justify-between p-4 sm:p-6 max-w-md mx-auto w-full select-none relative overflow-hidden">
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none z-0">
+      <div className="flex flex-col items-center justify-center pt-3 pb-1 z-10">
         <img
           src="/logo.png"
-          alt=""
-          className="w-80 h-80 sm:w-96 sm:h-96 object-contain opacity-40 -translate-y-12 scale-105 drop-shadow-[0_0_40px_rgba(134,59,255,0.35)]"
+          alt="Aether VPN"
+          className="h-10 sm:h-12 object-contain drop-shadow-[0_0_25px_rgba(134,59,255,0.4)]"
           onError={(e) => {
             (e.target as HTMLImageElement).style.display = 'none';
           }}
         />
-      </div>
-
-      <div className="flex items-center justify-center pt-1 z-10">
-        <div className="flex items-center bg-[#0d0d0d] p-1 rounded-xl border border-white/10 shadow-inner">
+        <div className="flex items-center bg-[#0d0d0d] p-1 rounded-xl border border-white/10 shadow-inner mt-3">
           <button
             onClick={() => updateOperatingMode('tun')}
             className={`px-3 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
@@ -93,12 +90,12 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
           <div
             className={`absolute w-56 h-56 rounded-full blur-3xl transition-all duration-700 pointer-events-none ${
               isConnected
-                ? 'bg-white/20 scale-110'
+                ? 'bg-purple-600/30 scale-110'
                 : isConnecting
-                ? 'bg-white/15 scale-105 animate-pulse'
+                ? 'bg-purple-600/25 scale-105 animate-pulse'
                 : isError
                 ? 'bg-red-500/15'
-                : 'bg-white/5 scale-95'
+                : 'bg-purple-950/25 scale-95'
             }`}
           />
 
