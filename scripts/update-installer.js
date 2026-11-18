@@ -9,7 +9,6 @@ const installerDir = path.join(rootDir, 'installer');
 
 console.log('[*] Synchronizing deliverables to installer/ directory...');
 
-// 1. Forcefully kill any running instances so file locks are released
 try {
   if (process.platform === 'win32') {
     execSync('powershell -NoProfile -Command "Stop-Process -Name aether-vpn-portable,aether-vpn,sing-box -Force -ErrorAction SilentlyContinue"', { stdio: 'ignore' });
@@ -26,7 +25,6 @@ if (!fs.existsSync(installerDir)) {
 
 let updatedCount = 0;
 
-// 2. Portable executable copy
 const releaseExe = path.join(rootDir, 'src-tauri', 'target', 'release', 'aether-vpn.exe');
 const targetPortable = path.join(installerDir, 'aether-vpn-portable.exe');
 
@@ -48,22 +46,23 @@ if (fs.existsSync(releaseExe)) {
   }
 }
 
-// 3. NSIS setup installer copy
-const nsisSetup = path.join(rootDir, 'src-tauri', 'target', 'release', 'bundle', 'nsis', 'AetherVPN_0.1.0_x64-setup.exe');
-const targetSetup = path.join(installerDir, 'AetherVPN_0.1.0_x64-setup.exe');
-
-if (fs.existsSync(nsisSetup)) {
-  try {
-    fs.copyFileSync(nsisSetup, targetSetup);
-    const szMb = (fs.statSync(targetSetup).size / 1024 / 1024).toFixed(2);
-    console.log(`[OK] Updated installer/AetherVPN_0.1.0_x64-setup.exe (${szMb} MB)`);
-    updatedCount++;
-  } catch (err) {
-    console.error(`[ERROR] Failed to update NSIS setup installer: ${err.message}`);
+const nsisDir = path.join(rootDir, 'src-tauri', 'target', 'release', 'bundle', 'nsis');
+if (fs.existsSync(nsisDir)) {
+  const files = fs.readdirSync(nsisDir).filter(f => f.endsWith('.exe') && !f.endsWith('.nsis.zip'));
+  for (const f of files) {
+    const src = path.join(nsisDir, f);
+    const dest = path.join(installerDir, f);
+    try {
+      fs.copyFileSync(src, dest);
+      const szMb = (fs.statSync(dest).size / 1024 / 1024).toFixed(2);
+      console.log(`[OK] Updated installer/${f} (${szMb} MB)`);
+      updatedCount++;
+    } catch (err) {
+      console.error(`[ERROR] Failed to update NSIS setup installer: ${err.message}`);
+    }
   }
 }
 
-// 4. Ensure sing-box.exe is synced
 const singboxSources = [
   path.join(rootDir, 'bin', 'sing-box.exe'),
   path.join(rootDir, 'src-tauri', 'bin', 'sing-box.exe'),

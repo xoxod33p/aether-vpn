@@ -1,4 +1,4 @@
-import { Profile, ConnectionInfo, TrafficStats, AppSettings, Subscription, RoutingRule, DnsConfig, LogEntry } from '../types';
+import { Profile, ConnectionInfo, TrafficStats, AppUsage, AppSettings, Subscription, RoutingRule, DnsConfig, LogEntry } from '../types';
 
 export const isTauri = (): boolean => {
   return typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
@@ -80,6 +80,10 @@ export const vpnApi = {
       latencyMs: 0,
       timestamp: Date.now(),
     });
+  },
+
+  getAppUsages: async (): Promise<AppUsage[]> => {
+    return safeInvoke<AppUsage[]>('get_app_usages', {}, []);
   },
 
   getRealPublicIp: async (): Promise<PublicIpInfo> => {

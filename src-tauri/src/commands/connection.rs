@@ -1,5 +1,5 @@
 use tauri::State;
-use crate::models::{ConnectionInfo, TrafficStats};
+use crate::models::{ConnectionInfo, TrafficStats, AppUsage};
 use crate::core::ConnectionManager;
 
 #[tauri::command]
@@ -29,4 +29,11 @@ pub async fn get_traffic_stats(
     manager: State<'_, ConnectionManager>,
 ) -> Result<TrafficStats, String> {
     Ok(manager.get_traffic_stats())
+}
+
+#[tauri::command]
+pub async fn get_app_usages(
+    manager: State<'_, ConnectionManager>,
+) -> Result<Vec<AppUsage>, String> {
+    Ok(manager.get_app_usages())
 }

@@ -6,12 +6,13 @@ import {
   Clock,
   Globe,
   Radio,
+  Layers,
   ChevronRight,
   AlertCircle,
   MapPin,
 } from 'lucide-react';
 import { VpnStoreType } from '../stores/useVpnStore';
-import { formatSpeed, formatDuration, getProtocolBadgeColor } from '../utils/formatters';
+import { formatSpeed, formatDuration, formatBytes, getProtocolBadgeColor } from '../utils/formatters';
 
 interface DashboardPageProps {
   store: VpnStoreType;
@@ -23,6 +24,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
     selectedProfile,
     trafficStats,
     durationSecs,
+    appUsages,
     connect,
     disconnect,
     setActiveTab,
@@ -225,6 +227,38 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
               <div className="text-xs font-mono font-bold text-white mt-0.5">
                 {formatDuration(durationSecs)}
               </div>
+            </div>
+          </div>
+        )}
+
+        {isConnected && (
+          <div
+            onClick={() => setActiveTab('apps')}
+            className="w-full flex items-center justify-between p-2.5 mt-2.5 rounded-2xl bg-[#0d0d0d] hover:bg-[#141414] border border-white/10 hover:border-white/20 transition-all cursor-pointer group"
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-7 h-7 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white shrink-0">
+                <Layers className="w-3.5 h-3.5" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                  <span>Application Usage</span>
+                  {appUsages && appUsages.length > 0 && (
+                    <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-white text-black">
+                      {appUsages.length}
+                    </span>
+                  )}
+                </div>
+                <div className="text-[10px] text-neutral-400 font-mono truncate">
+                  {appUsages && appUsages.length > 0
+                    ? `${appUsages[0].displayName}: ${formatBytes(appUsages[0].downloadBytes + appUsages[0].uploadBytes)}`
+                    : 'Monitoring active tunnel applications...'}
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-1 text-[11px] text-neutral-400 group-hover:text-white font-medium transition-colors shrink-0">
+              <span>View</span>
+              <ChevronRight className="w-3.5 h-3.5" />
             </div>
           </div>
         )}

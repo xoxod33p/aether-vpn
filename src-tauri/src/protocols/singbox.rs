@@ -267,7 +267,8 @@ impl SingboxConfigBuilder {
             "route": {
                 "rules": route_rules,
                 "final": "proxy",
-                "auto_detect_interface": true
+                "auto_detect_interface": true,
+                "find_process": true
             },
             "experimental": {
                 "clash_api": {

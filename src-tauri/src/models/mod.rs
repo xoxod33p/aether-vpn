@@ -9,7 +9,7 @@ pub mod log_entry;
 
 pub use profile::{Profile, VpnProtocol};
 pub use connection::{ConnectionInfo, ConnectionStatus, OperatingMode, GeoLocation};
-pub use traffic::TrafficStats;
+pub use traffic::{TrafficStats, AppUsage};
 pub use subscription::Subscription;
 pub use routing::{RoutingRule, RoutingAction, RoutingRuleType};
 pub use settings::AppSettings;

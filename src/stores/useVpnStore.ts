@@ -4,6 +4,7 @@ import {
   ConnectionInfo,
   ConnectionStatus,
   TrafficStats,
+  AppUsage,
   AppSettings,
   Subscription,
   RoutingRule,
@@ -42,6 +43,7 @@ const DEFAULT_DNS: DnsConfig = {
 export type NavTab =
   | 'dashboard'
   | 'servers'
+  | 'apps'
   | 'subscriptions'
   | 'routing'
   | 'dns'
@@ -59,6 +61,7 @@ export function useVpnStore() {
   const [dnsConfig, setDnsConfig] = useState<DnsConfig>(DEFAULT_DNS);
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [appUsages, setAppUsages] = useState<AppUsage[]>([]);
 
   const [connectionInfo, setConnectionInfo] = useState<ConnectionInfo>({
     status: 'Disconnected',
@@ -151,8 +154,14 @@ export function useVpnStore() {
     const timer = setInterval(async () => {
       if (connectionInfo.status === 'Connected') {
         try {
-          const stats = await vpnApi.getTrafficStats();
+          const [stats, apps] = await Promise.all([
+            vpnApi.getTrafficStats(),
+            vpnApi.getAppUsages().catch(() => []),
+          ]);
           setTrafficStats(stats);
+          if (apps && apps.length > 0) {
+            setAppUsages(apps);
+          }
 
           setTrafficHistory((prev) => {
             const nowStr = new Date().toLocaleTimeString('en-US', {
@@ -274,6 +283,7 @@ export function useVpnStore() {
         publicIp: undefined,
         location: undefined,
       });
+      setAppUsages([]);
       addLog('info', 'Tunnel disconnected cleanly. System networking restored.');
 
       setTimeout(async () => {
@@ -402,6 +412,8 @@ export function useVpnStore() {
     selectedProfile,
     connectionInfo,
     trafficStats,
+    appUsages,
+    setAppUsages,
     durationSecs,
     trafficHistory,
     subscriptions,

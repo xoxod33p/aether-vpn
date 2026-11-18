@@ -145,3 +145,16 @@ export interface LogEntry {
   message: string;
   target?: string;
 }
+
+export interface AppUsage {
+  processName: string;
+  displayName: string;
+  uploadBytes: number;
+  downloadBytes: number;
+  uploadSpeedBps: number;
+  downloadSpeedBps: number;
+  activeConnections: number;
+  iconType: string;
+  destinationHosts: string[];
+  lastSeen: string;
+}

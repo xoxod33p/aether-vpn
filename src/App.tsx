@@ -2,12 +2,14 @@ import React from 'react';
 import { useVpnStore, NavTab } from './stores/useVpnStore';
 import { DashboardPage } from './pages/DashboardPage';
 import { ServersPage } from './pages/ServersPage';
+import { AppsPage } from './pages/AppsPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { LogsPage } from './pages/LogsPage';
 import { LoadingSplash } from './components/common/LoadingSplash';
 import {
   Shield,
   Server,
+  Layers,
   Settings,
   Terminal,
 } from 'lucide-react';
@@ -25,6 +27,8 @@ export function App() {
         return <DashboardPage store={store} />;
       case 'servers':
         return <ServersPage store={store} />;
+      case 'apps':
+        return <AppsPage store={store} />;
       case 'settings':
         return <SettingsPage store={store} />;
       case 'logs':
@@ -45,6 +49,12 @@ export function App() {
       label: 'Servers',
       icon: <Server className="w-4 h-4" />,
       badge: profiles.length,
+    },
+    {
+      id: 'apps',
+      label: 'Apps',
+      icon: <Layers className="w-4 h-4" />,
+      badge: isConnected && store.appUsages.length > 0 ? store.appUsages.length : undefined,
     },
     {
       id: 'settings',

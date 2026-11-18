@@ -40,6 +40,7 @@ pub fn run() {
             disconnect_vpn,
             get_connection_status,
             get_traffic_stats,
+            get_app_usages,
             get_profiles,
             save_profile,
             delete_profile,

@@ -2,13 +2,16 @@ name: Release Automation & Cross-Platform CI
 
 on:
   push:
+    branches:
+      - master
+      - main
     tags:
       - 'v*'
   workflow_dispatch:
 
 concurrency:
-  group: release-${{ github.ref }}
-  cancel-in-progress: true
+  group: release-production
+  cancel-in-progress: false
 
 jobs:
   build-tauri:
@@ -78,6 +81,20 @@ jobs:
       - name: Run Backend Rust Test Suite
         run: cargo test --lib --manifest-path src-tauri/Cargo.toml
 
+      - name: Prepare Release Asset Overwrite
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: pwsh
+        run: |
+          $ver = (Get-Content src-tauri/tauri.conf.json | ConvertFrom-Json).version
+          $tag = "v$ver"
+          if ($env:RUNNER_OS -eq "Windows") {
+            gh release delete-asset $tag "AetherVPN_${ver}_x64-setup.exe" -y 2>$null
+          } else {
+            gh release delete-asset $tag "AetherVPN_${ver}_amd64.deb" -y 2>$null
+          }
+
       - name: Build Tauri Application Bundle
         uses: tauri-apps/tauri-action@v0
         env:
@@ -111,15 +128,24 @@ jobs:
             src-tauri/target/release/bundle/deb/*.deb
           if-no-files-found: ignore
 
-      - name: Upload Portable Windows Zip to Release
-        if: matrix.platform == 'windows-latest'
+      - name: Upload Bundles to Release
         continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: pwsh
         run: |
-          if (Test-Path "aether-vpn-portable-windows-x64.zip") {
-            $ver = (Get-Content src-tauri/tauri.conf.json | ConvertFrom-Json).version
-            gh release upload "v$ver" aether-vpn-portable-windows-x64.zip --clobber
+          $ver = (Get-Content src-tauri/tauri.conf.json | ConvertFrom-Json).version
+          $tag = "v$ver"
+          if ($env:RUNNER_OS -eq "Windows") {
+            Get-ChildItem -Path "src-tauri/target/release/bundle/nsis/*.exe" -ErrorAction SilentlyContinue | ForEach-Object {
+              gh release upload $tag $_.FullName --clobber
+            }
+            if (Test-Path "aether-vpn-portable-windows-x64.zip") {
+              gh release upload $tag aether-vpn-portable-windows-x64.zip --clobber
+            }
+          } else {
+            Get-ChildItem -Path "src-tauri/target/release/bundle/deb/*.deb" -ErrorAction SilentlyContinue | ForEach-Object {
+              gh release upload $tag $_.FullName --clobber
+            }
           }

@@ -3,7 +3,7 @@ use parking_lot::RwLock;
 use tracing::{info, warn};
 
 use crate::models::{
-    ConnectionInfo, ConnectionStatus, OperatingMode, GeoLocation, TrafficStats,
+    ConnectionInfo, ConnectionStatus, OperatingMode, GeoLocation, TrafficStats, AppUsage,
 };
 use crate::storage::Database;
 use crate::protocols::SingboxConfigBuilder;
@@ -17,6 +17,7 @@ use crate::network::GeoIpService;
 pub struct ConnectionManager {
     info: Arc<RwLock<ConnectionInfo>>,
     stats: Arc<RwLock<TrafficStats>>,
+    app_usages: Arc<RwLock<Vec<AppUsage>>>,
     process_mgr: Arc<ProcessManager>,
     proxy_backup: Arc<RwLock<Option<ProxyBackup>>>,
     db: Database,
@@ -47,6 +48,7 @@ impl ConnectionManager {
         Self {
             info: Arc::new(RwLock::new(initial_info)),
             stats: Arc::new(RwLock::new(initial_stats)),
+            app_usages: Arc::new(RwLock::new(Vec::new())),
             process_mgr: Arc::new(ProcessManager::new()),
             proxy_backup: Arc::new(RwLock::new(None)),
             db,
@@ -59,6 +61,10 @@ impl ConnectionManager {
 
     pub fn get_traffic_stats(&self) -> TrafficStats {
         self.stats.read().clone()
+    }
+
+    pub fn get_app_usages(&self) -> Vec<AppUsage> {
+        self.app_usages.read().clone()
     }
 
     pub async fn connect(&self, profile_id: &str) -> Result<ConnectionInfo, String> {
@@ -170,6 +176,7 @@ impl ConnectionManager {
         });
 
         let stats_arc = self.stats.clone();
+        let app_usages_arc = self.app_usages.clone();
         let info_arc = self.info.clone();
         let process_mgr_arc = self.process_mgr.clone();
         let clash_port = settings.clash_api_port;
@@ -197,7 +204,7 @@ impl ConnectionManager {
                     break;
                 }
 
-                TrafficMonitor::fetch_clash_traffic(clash_port, stats_arc.clone()).await;
+                TrafficMonitor::fetch_clash_traffic(clash_port, stats_arc.clone(), app_usages_arc.clone()).await;
             }
         });
 
@@ -241,6 +248,8 @@ impl ConnectionManager {
             s.active_connections = 0;
             s.latency_ms = 0;
         }
+
+        self.app_usages.write().clear();
 
         info!("Connection torn down. Networking restored.");
         crate::core::append_log("info", "Tunnel disconnected cleanly. System networking restored.", Some("core::conn"));
