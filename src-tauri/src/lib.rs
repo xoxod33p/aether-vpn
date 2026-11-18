@@ -11,8 +11,41 @@ use storage::Database;
 use tauri::Manager;
 use tracing_subscriber::EnvFilter;
 
+#[cfg(windows)]
+fn enforce_single_instance() -> bool {
+    use std::ffi::c_void;
+    unsafe extern "system" {
+        fn CreateMutexW(lpMutexAttributes: *mut c_void, bInitialOwner: i32, lpName: *const u16) -> *mut c_void;
+        fn GetLastError() -> u32;
+        fn FindWindowW(lpClassName: *const u16, lpWindowName: *const u16) -> *mut c_void;
+        fn SetForegroundWindow(hWnd: *mut c_void) -> i32;
+        fn ShowWindow(hWnd: *mut c_void, nCmdShow: i32) -> i32;
+    }
+    const ERROR_ALREADY_EXISTS: u32 = 183;
+    let name: Vec<u16> = "Global\\AetherVPNSingleInstanceMutex\0".encode_utf16().collect();
+    let handle = unsafe { CreateMutexW(std::ptr::null_mut(), 1, name.as_ptr()) };
+    if handle.is_null() || unsafe { GetLastError() } == ERROR_ALREADY_EXISTS {
+        let win_title: Vec<u16> = "AetherVPN\0".encode_utf16().collect();
+        let hwnd = unsafe { FindWindowW(std::ptr::null(), win_title.as_ptr()) };
+        if !hwnd.is_null() {
+            unsafe {
+                ShowWindow(hwnd, 9);
+                SetForegroundWindow(hwnd);
+            }
+        }
+        false
+    } else {
+        true
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    #[cfg(windows)]
+    if !enforce_single_instance() {
+        return;
+    }
+
     let _ = tracing_subscriber::fmt()
         .with_env_filter(EnvFilter::from_default_env().add_directive(tracing::Level::INFO.into()))
         .try_init();
@@ -38,7 +71,7 @@ pub fn run() {
                 let quit_i = tauri::menu::MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
                 let menu = tauri::menu::Menu::with_items(app, &[&show_i, &quit_i])?;
 
-                let _tray = tauri::tray::TrayIconBuilder::new()
+                let _tray = tauri::tray::TrayIconBuilder::with_id("main-tray")
                     .icon(tray_icon_img)
                     .tooltip("AetherVPN")
                     .menu(&menu)

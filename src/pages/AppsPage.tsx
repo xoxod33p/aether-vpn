@@ -99,9 +99,6 @@ export const AppsPage: React.FC<AppsPageProps> = ({ store }) => {
               </span>
             )}
           </div>
-          <p className="text-xs text-neutral-400 mt-0.5">
-            Real-time applications actively consuming VPN bandwidth and routing through the tunnel.
-          </p>
         </div>
 
         <div className="flex items-center gap-2">
