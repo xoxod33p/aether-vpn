@@ -13,6 +13,7 @@ pub struct ProcessManager {
 
 impl ProcessManager {
     pub fn new() -> Self {
+        Self::cleanup_virtual_adapters();
         Self {
             child: Arc::new(Mutex::new(None)),
             config_path: Arc::new(parking_lot::Mutex::new(None)),
@@ -24,11 +25,32 @@ impl ProcessManager {
         self.last_error.lock().clone()
     }
 
-    pub fn kill_orphans() {
+    pub fn cleanup_virtual_adapters() {
         #[cfg(windows)]
         {
             let _ = crate::core::silent_command("taskkill")
-                .args(["/F", "/IM", "sing-box.exe"])
+                .args(["/F", "/IM", "sing-box.exe", "/IM", "badvpn-tun2socks.exe"])
+                .output();
+
+            let _ = crate::core::silent_command("route")
+                .args(["delete", "0.0.0.0", "10.4.2.1"])
+                .output();
+
+            let _ = crate::core::silent_command("route")
+                .args(["delete", "0.0.0.0", "172.19.0.1"])
+                .output();
+
+            let _ = crate::core::silent_command("netsh")
+                .args(["interface", "set", "interface", "name=\"AetherTun\"", "admin=DISABLED"])
+                .output();
+
+            let _ = crate::core::silent_command("powershell")
+                .args([
+                    "-NoProfile",
+                    "-NonInteractive",
+                    "-Command",
+                    "Get-NetAdapter | Where-Object { $_.InterfaceDescription -like '*Wintun*' -or $_.Name -like 'Aether*' -or ($_.InterfaceDescription -like '*TAP-Windows*' -and $_.Status -eq 'Up') } | ForEach-Object { Disable-NetAdapter -Name $_.Name -Confirm:$false -ErrorAction SilentlyContinue; Remove-NetRoute -InterfaceIndex $_.InterfaceIndex -Confirm:$false -ErrorAction SilentlyContinue }; ipconfig /flushdns",
+                ])
                 .output();
         }
         #[cfg(not(windows))]
@@ -37,7 +59,15 @@ impl ProcessManager {
                 .arg("-9")
                 .arg("sing-box")
                 .output();
+
+            let _ = std::process::Command::new("ip")
+                .args(["link", "delete", "AetherTun"])
+                .output();
         }
+    }
+
+    pub fn kill_orphans() {
+        Self::cleanup_virtual_adapters();
     }
 
     pub fn find_singbox_binary() -> Result<PathBuf, String> {

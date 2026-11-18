@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, Download, X, ExternalLink, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { Download, X, ExternalLink, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { UpdateInfo } from '../../types';
 import { vpnApi } from '../../services/tauriApi';
 
@@ -37,8 +37,8 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ updateInfo, isOpen, on
       <div className="relative w-full max-w-md bg-[#0a0a0a] border border-white/15 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col">
         <div className="p-5 pb-4 flex items-start justify-between border-b border-white/10 bg-gradient-to-b from-white/[0.04] to-transparent">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-white shadow-[0_0_15px_rgba(255,255,255,0.15)]">
-              <Sparkles className="w-5 h-5" />
+            <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center p-1.5 shadow-[0_0_15px_rgba(255,255,255,0.15)] shrink-0">
+              <img src="/icon.png" alt="Aether" className="w-6 h-6 object-contain" />
             </div>
             <div>
               <div className="flex items-center gap-2">

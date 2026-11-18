@@ -583,8 +583,8 @@ trait DnsHelper {
 
 impl DnsHelper for DnsConfig {
     fn primary_dns_or_fallback(&self) -> String {
-        if self.primary_dns.is_empty() {
-            "https://1.1.1.1/dns-query".to_string()
+        if self.primary_dns.is_empty() || self.primary_dns.starts_with("https://") {
+            "udp://1.1.1.1".to_string()
         } else {
             self.primary_dns.clone()
         }

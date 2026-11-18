@@ -51,6 +51,7 @@ pub fn run() {
         .try_init();
 
     tracing::info!("Initializing AetherVPN backend runtime...");
+    core::ProcessManager::cleanup_virtual_adapters();
 
     let db = Database::new(None).expect("Failed to initialize SQLite database");
     let conn_mgr = ConnectionManager::new(db.clone());
@@ -113,6 +114,7 @@ pub fn run() {
                 tauri::async_runtime::block_on(async move {
                     let _ = mgr.disconnect().await;
                 });
+                core::ProcessManager::cleanup_virtual_adapters();
                 let app = window.app_handle().clone();
                 app.exit(0);
             }

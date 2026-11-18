@@ -46,11 +46,11 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
 
   return (
     <div className="flex flex-col h-full justify-between p-4 sm:p-6 max-w-md mx-auto w-full select-none relative overflow-hidden">
-      <div className="flex flex-col items-center justify-center pt-4 pb-2 z-10">
+      <div className="flex flex-col items-center justify-center pt-2 pb-0 z-10">
         <img
           src="/logo.png"
           alt="Aether VPN"
-          className="h-16 sm:h-20 max-w-[240px] sm:max-w-[280px] object-contain drop-shadow-[0_0_35px_rgba(134,59,255,0.45)] transition-all"
+          className="h-28 sm:h-36 max-w-[320px] sm:max-w-[380px] w-auto object-contain drop-shadow-[0_0_45px_rgba(134,59,255,0.55)] transition-all"
           onError={(e) => {
             (e.target as HTMLImageElement).style.display = 'none';
           }}
