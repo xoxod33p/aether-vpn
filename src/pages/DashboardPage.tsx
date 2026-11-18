@@ -4,8 +4,6 @@ import {
   ArrowDown,
   ArrowUp,
   Clock,
-  Globe,
-  Radio,
   ChevronRight,
   AlertCircle,
   MapPin,
@@ -27,8 +25,6 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
     connect,
     disconnect,
     setActiveTab,
-    settings,
-    updateOperatingMode,
   } = store;
 
   const isConnected = connectionInfo.status === 'Connected';
@@ -50,39 +46,15 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
 
   return (
     <div className="flex flex-col h-full justify-between p-4 sm:p-6 max-w-md mx-auto w-full select-none relative overflow-hidden">
-      <div className="flex flex-col items-center justify-center pt-3 pb-1 z-10">
+      <div className="flex flex-col items-center justify-center pt-4 pb-2 z-10">
         <img
           src="/logo.png"
           alt="Aether VPN"
-          className="h-10 sm:h-12 object-contain drop-shadow-[0_0_25px_rgba(134,59,255,0.4)]"
+          className="h-16 sm:h-20 max-w-[240px] sm:max-w-[280px] object-contain drop-shadow-[0_0_35px_rgba(134,59,255,0.45)] transition-all"
           onError={(e) => {
             (e.target as HTMLImageElement).style.display = 'none';
           }}
         />
-        <div className="flex items-center bg-[#0d0d0d] p-1 rounded-xl border border-white/10 shadow-inner mt-3">
-          <button
-            onClick={() => updateOperatingMode('tun')}
-            className={`px-3 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
-              settings.defaultMode === 'tun'
-                ? 'bg-white text-black shadow-md'
-                : 'text-neutral-400 hover:text-white'
-            }`}
-          >
-            <Radio className="w-3 h-3" />
-            <span>VPN (TUN)</span>
-          </button>
-          <button
-            onClick={() => updateOperatingMode('system_proxy')}
-            className={`px-3 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
-              settings.defaultMode === 'system_proxy'
-                ? 'bg-white text-black shadow-md'
-                : 'text-neutral-400 hover:text-white'
-            }`}
-          >
-            <Globe className="w-3 h-3" />
-            <span>Proxy</span>
-          </button>
-        </div>
       </div>
 
       <div className="flex flex-col items-center justify-center my-auto py-5 z-10">
