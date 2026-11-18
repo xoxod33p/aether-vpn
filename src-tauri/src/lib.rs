@@ -108,15 +108,20 @@ pub fn run() {
             Ok(())
         })
         .on_window_event(|window, event| {
-            if let tauri::WindowEvent::CloseRequested { .. } = event {
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                api.prevent_close();
                 let conn_mgr = window.state::<ConnectionManager>();
                 let mgr = conn_mgr.inner().clone();
-                tauri::async_runtime::block_on(async move {
+                tauri::async_runtime::spawn(async move {
+                    tokio::spawn(async {
+                        tokio::time::sleep(tokio::time::Duration::from_millis(1500)).await;
+                        core::ProcessManager::cleanup_virtual_adapters();
+                        std::process::exit(0);
+                    });
                     let _ = mgr.disconnect().await;
+                    core::ProcessManager::cleanup_virtual_adapters();
+                    std::process::exit(0);
                 });
-                core::ProcessManager::cleanup_virtual_adapters();
-                let app = window.app_handle().clone();
-                app.exit(0);
             }
         })
         .manage(db)

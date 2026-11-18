@@ -4,17 +4,20 @@ use crate::models::{Profile, VpnProtocol, AppSettings, DnsConfig, OperatingMode,
 pub struct SingboxConfigBuilder;
 
 impl SingboxConfigBuilder {
-    fn resolve_domain_to_ip(domain: &str) -> Option<String> {
-        if domain.parse::<std::net::IpAddr>().is_ok() {
-            return Some(domain.to_string());
+    fn resolve_domain_to_ips(domain: &str) -> Vec<String> {
+        if let Ok(ip) = domain.parse::<std::net::IpAddr>() {
+            return vec![ip.to_string()];
         }
         use std::net::ToSocketAddrs;
-        if let Ok(mut addrs) = (domain, 0).to_socket_addrs() {
-            if let Some(addr) = addrs.next() {
-                return Some(addr.ip().to_string());
+        if let Ok(addrs) = (domain, 0).to_socket_addrs() {
+            let mut ips: Vec<String> = addrs.map(|a| a.ip().to_string()).collect();
+            ips.sort();
+            ips.dedup();
+            if !ips.is_empty() {
+                return ips;
             }
         }
-        None
+        Vec::new()
     }
 
     pub fn build(
@@ -23,7 +26,8 @@ impl SingboxConfigBuilder {
         dns: &DnsConfig,
         rules: &[RoutingRule],
     ) -> Value {
-        let target_server = Self::resolve_domain_to_ip(&profile.server).unwrap_or_else(|| profile.server.clone());
+        let resolved_ips = Self::resolve_domain_to_ips(&profile.server);
+        let target_server = resolved_ips.first().cloned().unwrap_or_else(|| profile.server.clone());
         let outbound = Self::build_profile_outbound(profile, &target_server);
 
         let mut inbounds = Vec::new();
@@ -47,11 +51,11 @@ impl SingboxConfigBuilder {
                     "8.8.8.8/32".to_string(),
                     "8.8.4.4/32".to_string(),
                 ];
-                if target_server.parse::<std::net::IpAddr>().is_ok() {
-                    let cidr = if target_server.contains(':') {
-                        format!("{}/128", target_server)
+                for ip in &resolved_ips {
+                    let cidr = if ip.contains(':') {
+                        format!("{}/128", ip)
                     } else {
-                        format!("{}/32", target_server)
+                        format!("{}/32", ip)
                     };
                     if !exclude_addrs.contains(&cidr) {
                         exclude_addrs.push(cidr);
@@ -120,11 +124,11 @@ impl SingboxConfigBuilder {
             "8.8.8.8/32".to_string(),
             "8.8.4.4/32".to_string(),
         ];
-        if target_server.parse::<std::net::IpAddr>().is_ok() {
-            let cidr = if target_server.contains(':') {
-                format!("{}/128", target_server)
+        for ip in &resolved_ips {
+            let cidr = if ip.contains(':') {
+                format!("{}/128", ip)
             } else {
-                format!("{}/32", target_server)
+                format!("{}/32", ip)
             };
             if !direct_ips.contains(&cidr) {
                 direct_ips.push(cidr);
@@ -220,11 +224,13 @@ impl SingboxConfigBuilder {
             json!({
                 "tag": "direct-dns",
                 "address": "1.1.1.1",
+                "strategy": "ipv4_only",
                 "detour": "direct"
             }),
             json!({
                 "tag": "direct-dns-backup",
                 "address": "8.8.8.8",
+                "strategy": "ipv4_only",
                 "detour": "direct"
             }),
         ];
@@ -350,7 +356,9 @@ impl SingboxConfigBuilder {
                         "ws" => {
                             let mut ws = json!({
                                 "type": "ws",
-                                "path": p.transport_path.as_deref().filter(|s| !s.is_empty()).unwrap_or("/")
+                                "path": p.transport_path.as_deref().filter(|s| !s.is_empty()).unwrap_or("/"),
+                                "max_early_data": 2048,
+                                "early_data_header_name": "Sec-WebSocket-Protocol"
                             });
                             let host = p.transport_host.as_deref().or(p.server_name.as_deref()).unwrap_or(&p.server);
                             if !host.is_empty() {
