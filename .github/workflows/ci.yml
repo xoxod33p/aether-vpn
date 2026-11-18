@@ -17,6 +17,11 @@ concurrency:
 jobs:
   test:
     runs-on: windows-latest
+    env:
+      AETHER_CLOUD_API_URL: ${{ secrets.AETHER_CLOUD_API_URL }}
+      AETHER_CLOUD_API_KEY: ${{ secrets.AETHER_CLOUD_API_KEY }}
+      VITE_CLOUD_API_URL: ${{ secrets.AETHER_CLOUD_API_URL }}
+      VITE_CLOUD_API_KEY: ${{ secrets.AETHER_CLOUD_API_KEY }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

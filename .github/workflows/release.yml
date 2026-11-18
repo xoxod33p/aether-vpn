@@ -82,6 +82,11 @@ jobs:
             args: '--bundles deb'
 
     runs-on: ${{ matrix.platform }}
+    env:
+      AETHER_CLOUD_API_URL: ${{ secrets.AETHER_CLOUD_API_URL }}
+      AETHER_CLOUD_API_KEY: ${{ secrets.AETHER_CLOUD_API_KEY }}
+      VITE_CLOUD_API_URL: ${{ secrets.AETHER_CLOUD_API_URL }}
+      VITE_CLOUD_API_KEY: ${{ secrets.AETHER_CLOUD_API_KEY }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -180,6 +185,10 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          AETHER_CLOUD_API_URL: ${{ secrets.AETHER_CLOUD_API_URL }}
+          AETHER_CLOUD_API_KEY: ${{ secrets.AETHER_CLOUD_API_KEY }}
+          VITE_CLOUD_API_URL: ${{ secrets.AETHER_CLOUD_API_URL }}
+          VITE_CLOUD_API_KEY: ${{ secrets.AETHER_CLOUD_API_KEY }}
         with:
           tagName: v__VERSION__
           releaseName: 'AetherVPN v__VERSION__'
