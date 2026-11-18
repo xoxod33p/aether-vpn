@@ -129,6 +129,7 @@ pub fn run() {
             delete_profile,
             test_profile_latency,
             import_profile_link,
+            sync_cloud_servers,
             get_settings,
             save_settings,
             get_dns_config,

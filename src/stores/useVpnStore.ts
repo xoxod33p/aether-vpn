@@ -12,7 +12,7 @@ import {
   LogEntry,
   OperatingMode,
 } from '../types';
-import { vpnApi } from '../services/tauriApi';
+import { vpnApi, isTauri } from '../services/tauriApi';
 
 const DEFAULT_SETTINGS: AppSettings = {
   theme: 'dark',
@@ -394,6 +394,65 @@ export function useVpnStore() {
     addLog('warn', `Kill Switch ${enabled ? 'ARMED (Strict firewall rules active)' : 'DISARMED'}`);
   }, [addLog]);
 
+  const syncCloudServers = useCallback(async (): Promise<number> => {
+    try {
+      addLog('info', 'Syncing free cloud servers...');
+      let syncedCount = 0;
+      if (isTauri()) {
+        const synced = await vpnApi.syncCloudServers();
+        syncedCount = synced.length;
+      } else {
+        const apiUrl = 'https://aether-backend-drab.vercel.app/api/configs?key=aether_sync_super_secret_key_123';
+        const res = await fetch(apiUrl, {
+          headers: { 'X-API-Key': 'aether_sync_super_secret_key_123' },
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const list = Array.isArray(data) ? data : (data.servers || data.configs || []);
+        for (const s of list) {
+          if (!s.server || !s.port) continue;
+          const profile: Profile = {
+            id: s.id && s.id.trim() ? s.id : `sync-${s.protocol || 'vless'}-${s.server}-${s.port}`,
+            name: s.name || `Free ${s.countryCode || 'Server'} - ${s.server}`,
+            protocol: s.protocol || 'vless',
+            server: s.server,
+            port: Number(s.port),
+            uuid: s.uuid,
+            password: s.password,
+            username: s.username,
+            cipher: s.cipher,
+            tlsEnabled: s.tlsEnabled ?? true,
+            serverName: s.serverName || s.server,
+            allowInsecure: s.allowInsecure ?? false,
+            realityPublicKey: s.realityPublicKey,
+            realityShortId: s.realityShortId,
+            transportType: s.transportType || 'tcp',
+            transportPath: s.transportPath,
+            transportHost: s.transportHost,
+            flow: s.flow,
+            countryCode: s.countryCode || 'US',
+            groupName: 'Free Sync',
+            isFavorite: false,
+            createdAt: s.createdAt || new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
+          await vpnApi.saveProfile(profile);
+          syncedCount++;
+        }
+      }
+      const refreshed = await vpnApi.getProfiles();
+      setProfiles(refreshed);
+      if (refreshed.length > 0 && !selectedProfileId) {
+        setSelectedProfileId(refreshed[0].id);
+      }
+      addLog('info', `Cloud sync complete: ${syncedCount} server(s) updated`);
+      return syncedCount;
+    } catch (e: any) {
+      addLog('error', `Cloud sync failed: ${e.message}`);
+      throw e;
+    }
+  }, [addLog, selectedProfileId]);
+
   const clearLogs = useCallback(async () => {
     try {
       await vpnApi.clearLogs();
@@ -432,6 +491,7 @@ export function useVpnStore() {
     deleteProfile,
     saveProfile,
     importProfileLink,
+    syncCloudServers,
     updateOperatingMode,
     toggleKillSwitch,
     addLog,
