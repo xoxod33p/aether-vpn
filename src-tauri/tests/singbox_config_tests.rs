@@ -58,7 +58,6 @@ fn test_singbox_vless_config_generation() {
 
     let config = SingboxConfigBuilder::build(&profile, &settings, &dns, &rules);
 
-    // Verify root sections
     assert!(config.get("log").is_some());
     assert!(config.get("dns").is_some());
     assert!(config.get("inbounds").is_some());
@@ -66,7 +65,6 @@ fn test_singbox_vless_config_generation() {
     assert!(config.get("route").is_some());
     assert!(config.get("experimental").is_some());
 
-    // Verify proxy outbound
     let outbounds = config["outbounds"].as_array().expect("Outbounds must be an array");
     let proxy_out = outbounds.iter().find(|o| o["tag"] == "proxy").expect("Proxy outbound missing");
     assert_eq!(proxy_out["type"], "vless");
@@ -77,7 +75,6 @@ fn test_singbox_vless_config_generation() {
     assert_eq!(proxy_out["transport"]["type"], "ws");
     assert_eq!(proxy_out["transport"]["path"], "/vless-ws");
 
-    // Verify Clash API config
     assert_eq!(config["experimental"]["clash_api"]["external_controller"], "127.0.0.1:9090");
 }
 
@@ -169,7 +166,6 @@ fn test_singbox_schema_validation_against_real_binary() {
         };
 
         let mut settings = AppSettings::default();
-        // In check mode without admin rights, system proxy mode validates all routing/outbounds/inbounds cleanly
         settings.default_mode = OperatingMode::SystemProxy;
         let dns = DnsConfig::default();
 
@@ -177,7 +173,6 @@ fn test_singbox_schema_validation_against_real_binary() {
         let temp_file = std::env::temp_dir().join("singbox_test_check.json");
         std::fs::write(&temp_file, serde_json::to_string_pretty(&config).unwrap()).unwrap();
 
-        // Run `sing-box check -c <file>`
         let output = std::process::Command::new(&bin_path)
             .args(["check", "-c"])
             .arg(&temp_file)

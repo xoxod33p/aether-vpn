@@ -15,10 +15,8 @@ impl SystemProxyManager {
     pub fn enable_windows(port: u16) -> Result<ProxyBackup, String> {
         info!("Configuring Windows system proxy on 127.0.0.1:{}", port);
         
-        // 1. Read current settings for backup
         let backup = Self::get_windows_proxy_settings().unwrap_or_default();
 
-        // 2. Set registry keys via powershell / netsh
         let ps_cmd = format!(
             r#"Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings' -Name ProxyEnable -Value 1 -Type DWord;
                Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings' -Name ProxyServer -Value '127.0.0.1:{}' -Type String;

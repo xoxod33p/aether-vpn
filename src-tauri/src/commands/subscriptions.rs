@@ -34,17 +34,14 @@ pub async fn update_subscription(id: String, db: State<'_, Database>) -> Result<
             let count = profiles.len();
             info!("Successfully parsed {} profiles from subscription '{}'", count, sub.name);
 
-            // Clean previous profiles from this subscription
             let _ = db.delete_profiles_by_subscription(&sub.id);
 
-            // Save new profiles
             for p in &profiles {
                 if let Err(err) = db.save_profile(p) {
                     warn!("Failed to save imported profile {}: {}", p.name, err);
                 }
             }
 
-            // Update subscription state
             sub.profile_count = count as u32;
             sub.last_status = "success".to_string();
             sub.last_updated_at = Some(chrono::Utc::now().to_rfc3339());

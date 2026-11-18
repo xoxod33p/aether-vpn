@@ -6,13 +6,12 @@ import {
   Clock,
   Shield,
   ShieldAlert,
-  Server,
   Activity,
   Globe,
   Radio,
   ChevronRight,
   AlertCircle,
-  Zap,
+  MapPin,
 } from 'lucide-react';
 import { VpnStoreType } from '../stores/useVpnStore';
 import { formatSpeed, formatDuration, getProtocolBadgeColor } from '../utils/formatters';
@@ -53,7 +52,6 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
 
   return (
     <div className="flex flex-col h-full justify-between p-4 sm:p-6 max-w-md mx-auto w-full select-none relative overflow-hidden">
-      
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none z-0">
         <img
           src="/logo.png"
@@ -64,9 +62,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
           }}
         />
       </div>
-      
-      <div className="flex items-center justify-between gap-2 pt-1">
-        
+
+      <div className="flex items-center justify-between gap-2 pt-1 z-10">
         <div className="flex items-center bg-[#0d0d0d] p-1 rounded-xl border border-white/10 shadow-inner">
           <button
             onClick={() => updateOperatingMode('tun')}
@@ -92,7 +89,6 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
           </button>
         </div>
 
-        
         <div
           onClick={() => setActiveTab('settings')}
           className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#0d0d0d] border border-white/10 text-xs font-medium cursor-pointer hover:border-white/30 transition-all"
@@ -108,12 +104,10 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
         </div>
       </div>
 
-      
-      <div className="flex flex-col items-center justify-center my-auto py-6">
-        
+      <div className="flex flex-col items-center justify-center my-auto py-5 z-10">
         <div className="relative flex items-center justify-center">
           <div
-            className={`absolute w-52 h-52 rounded-full blur-3xl transition-all duration-700 pointer-events-none ${
+            className={`absolute w-56 h-56 rounded-full blur-3xl transition-all duration-700 pointer-events-none ${
               isConnected
                 ? 'bg-white/20 scale-110'
                 : isConnecting
@@ -124,21 +118,24 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
             }`}
           />
 
-          
           {isConnected && (
-            <div className="absolute -inset-4 rounded-full border border-white/30 animate-ping pointer-events-none" />
-          )}
-          {isConnecting && (
-            <div className="absolute -inset-4 rounded-full border border-white/30 animate-pulse pointer-events-none" />
+            <>
+              <div className="absolute -inset-4 rounded-full border border-white/25 animate-sonar-1 pointer-events-none" />
+              <div className="absolute -inset-4 rounded-full border border-white/20 animate-sonar-2 pointer-events-none" />
+              <div className="absolute -inset-4 rounded-full border border-white/15 animate-sonar-3 pointer-events-none" />
+            </>
           )}
 
-          
+          {isConnecting && (
+            <div className="absolute -inset-5 rounded-full border-2 border-dashed border-white/35 animate-radar-spin pointer-events-none" />
+          )}
+
           <button
             onClick={handleToggle}
             disabled={isConnecting || isDisconnecting}
             className={`w-36 h-36 rounded-full flex flex-col items-center justify-center transition-all duration-300 cursor-pointer active:scale-95 shadow-2xl relative z-10 ${
               isConnected
-                ? 'bg-white text-black shadow-[0_0_50px_rgba(255,255,255,0.4)] ring-4 ring-white/25 hover:bg-neutral-100'
+                ? 'bg-white text-black shadow-[0_0_55px_rgba(255,255,255,0.45)] ring-4 ring-white/25 hover:bg-neutral-100'
                 : isConnecting || isDisconnecting
                 ? 'bg-neutral-800 text-neutral-200 border-2 border-white/30 cursor-wait animate-pulse'
                 : isError
@@ -161,20 +158,27 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
           </button>
         </div>
 
-        
-        <div className="mt-6 text-center space-y-1">
+        <div className="mt-6 text-center space-y-1.5">
           <div className="flex items-center justify-center gap-2">
-            <span
-              className={`w-2.5 h-2.5 rounded-full ${
-                isConnected
-                  ? 'bg-white shadow-[0_0_10px_rgba(255,255,255,0.9)] animate-pulse'
-                  : isConnecting
-                  ? 'bg-neutral-400 animate-bounce'
-                  : isError
-                  ? 'bg-red-400'
-                  : 'bg-neutral-600'
-              }`}
-            />
+            <div className="relative flex items-center justify-center w-2.5 h-2.5">
+              {isConnected && (
+                <span className="absolute w-full h-full rounded-full bg-white animate-location-beacon opacity-75" />
+              )}
+              {isConnecting && (
+                <span className="absolute w-full h-full rounded-full bg-neutral-400 animate-ping opacity-75" />
+              )}
+              <span
+                className={`relative w-2 h-2 rounded-full ${
+                  isConnected
+                    ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.9)]'
+                    : isConnecting
+                    ? 'bg-neutral-400'
+                    : isError
+                    ? 'bg-red-400'
+                    : 'bg-neutral-600'
+                }`}
+              />
+            </div>
             <span className="text-sm font-bold tracking-wide text-white">
               {isConnected
                 ? 'Protected & Encrypted'
@@ -186,19 +190,20 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
             </span>
           </div>
 
-          
-          <p className="text-xs text-neutral-400 font-mono">
-            {connectionInfo.publicIp ? (
-              <span>
-                {connectionInfo.publicIp}
-                {connectionInfo.location?.city ? ` • ${connectionInfo.location.city}, ${connectionInfo.location.countryCode}` : ''}
-              </span>
-            ) : (
-              'IP Protected'
-            )}
-          </p>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#0d0d0d] border border-white/10">
+            <MapPin className="w-3 h-3 text-neutral-400" />
+            <p className="text-xs text-neutral-300 font-mono">
+              {connectionInfo.publicIp ? (
+                <span>
+                  {connectionInfo.publicIp}
+                  {connectionInfo.location?.city ? ` • ${connectionInfo.location.city}, ${connectionInfo.location.countryCode}` : ''}
+                </span>
+              ) : (
+                'IP Protected'
+              )}
+            </p>
+          </div>
 
-          
           {connectionInfo.errorMessage && (
             <div className="mt-2 inline-flex items-center gap-1.5 text-xs text-red-300 bg-red-950/60 px-3 py-1 rounded-xl border border-red-800/60">
               <AlertCircle className="w-3.5 h-3.5 text-red-400 shrink-0" />
@@ -207,10 +212,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
           )}
         </div>
 
-        
         {isConnected && (
-          <div className="w-full grid grid-cols-4 gap-2 mt-6 p-3 rounded-2xl bg-[#0d0d0d] border border-white/10 shadow-xl">
-            
+          <div className="w-full grid grid-cols-4 gap-2 mt-5 p-3 rounded-2xl bg-[#0d0d0d] border border-white/10 shadow-xl">
             <div className="flex flex-col items-center">
               <div className="flex items-center gap-1 text-[10px] text-neutral-400 uppercase font-semibold">
                 <ArrowDown className="w-3 h-3 text-white" />
@@ -221,7 +224,6 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
               </div>
             </div>
 
-            
             <div className="flex flex-col items-center">
               <div className="flex items-center gap-1 text-[10px] text-neutral-400 uppercase font-semibold">
                 <ArrowUp className="w-3 h-3 text-neutral-300" />
@@ -232,7 +234,6 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
               </div>
             </div>
 
-            
             <div className="flex flex-col items-center">
               <div className="flex items-center gap-1 text-[10px] text-neutral-400 uppercase font-semibold">
                 <Activity className="w-3 h-3 text-neutral-300" />
@@ -243,7 +244,6 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
               </div>
             </div>
 
-            
             <div className="flex flex-col items-center">
               <div className="flex items-center gap-1 text-[10px] text-neutral-400 uppercase font-semibold">
                 <Clock className="w-3 h-3 text-neutral-300" />
@@ -257,26 +257,40 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
         )}
       </div>
 
-      
-      <div className="w-full pb-1">
+      <div className="w-full pb-1 z-10">
         <div
           onClick={() => setActiveTab('servers')}
-          className="group flex items-center justify-between p-3.5 rounded-2xl bg-[#0d0d0d] hover:bg-[#141414] border border-white/10 hover:border-white/30 shadow-lg cursor-pointer transition-all duration-200"
+          className={`group relative flex items-center justify-between p-3.5 rounded-2xl border transition-all duration-200 cursor-pointer ${
+            isConnected
+              ? 'bg-[#0e0e0e] border-white/30 shadow-[0_0_25px_rgba(255,255,255,0.06)]'
+              : 'bg-[#0d0d0d] hover:bg-[#141414] border-white/10 hover:border-white/30 shadow-lg'
+          }`}
         >
           <div className="flex items-center gap-3 min-w-0">
-            
-            <div className="w-10 h-10 rounded-xl bg-[#050505] border border-white/10 flex items-center justify-center text-lg shrink-0 shadow-inner">
-              {selectedProfile?.countryCode === 'SG'
-                ? '🇸🇬'
-                : selectedProfile?.countryCode === 'US'
-                ? '🇺🇸'
-                : selectedProfile?.countryCode === 'DE'
-                ? '🇩🇪'
-                : selectedProfile?.countryCode === 'JP'
-                ? '🇯🇵'
-                : selectedProfile?.countryCode === 'GB'
-                ? '🇬🇧'
-                : '🌐'}
+            <div className="relative">
+              {isConnecting && (
+                <div className="absolute -inset-1 rounded-xl border border-white/40 animate-radar-spin pointer-events-none" />
+              )}
+              {isConnected && (
+                <div className="absolute -inset-1 rounded-xl border border-white/20 animate-location-beacon pointer-events-none" />
+              )}
+              <div className="w-10 h-10 rounded-xl bg-[#050505] border border-white/10 flex items-center justify-center text-lg shrink-0 shadow-inner relative z-10">
+                {selectedProfile?.countryCode === 'SG'
+                  ? '🇸🇬'
+                  : selectedProfile?.countryCode === 'US'
+                  ? '🇺🇸'
+                  : selectedProfile?.countryCode === 'DE'
+                  ? '🇩🇪'
+                  : selectedProfile?.countryCode === 'JP'
+                  ? '🇯🇵'
+                  : selectedProfile?.countryCode === 'GB'
+                  ? '🇬🇧'
+                  : '🌐'}
+              </div>
+
+              {isConnected && (
+                <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-white border border-black shadow-[0_0_6px_rgba(255,255,255,0.8)] z-20" />
+              )}
             </div>
 
             <div className="min-w-0">
@@ -300,13 +314,21 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
             </div>
           </div>
 
-          
           <div className="flex items-center gap-2 shrink-0">
+            {isConnected && (
+              <div className="flex items-end gap-0.5 h-3 px-1.5">
+                <div className="w-1 bg-white rounded-full animate-signal-1" />
+                <div className="w-1 bg-white rounded-full animate-signal-2" />
+                <div className="w-1 bg-white rounded-full animate-signal-3" />
+              </div>
+            )}
+
             {selectedProfile?.latencyMs && selectedProfile.latencyMs > 0 ? (
               <span className="text-[11px] font-mono font-semibold text-neutral-200 bg-white/10 px-2 py-0.5 rounded-md border border-white/15">
                 {selectedProfile.latencyMs} ms
               </span>
             ) : null}
+
             <div className="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center text-neutral-400 group-hover:text-black group-hover:bg-white transition-all">
               <ChevronRight className="w-4 h-4" />
             </div>

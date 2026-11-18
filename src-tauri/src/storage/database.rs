@@ -145,7 +145,6 @@ impl Database {
             ",
         )?;
 
-        // Ensure columns exist on pre-existing databases
         let _ = conn.execute("ALTER TABLE profiles ADD COLUMN transport_host TEXT", []);
         let _ = conn.execute("ALTER TABLE profiles ADD COLUMN flow TEXT", []);
         let _ = conn.execute("ALTER TABLE profiles ADD COLUMN fingerprint TEXT", []);
@@ -159,7 +158,6 @@ impl Database {
     fn seed_defaults_if_empty(&self) -> Result<()> {
         let conn = self.conn.lock();
 
-        // Seed App Settings
         let settings_count: i64 = conn.query_row("SELECT COUNT(*) FROM app_settings", [], |r| r.get(0))?;
         if settings_count == 0 {
             conn.execute(
@@ -172,7 +170,6 @@ impl Database {
             )?;
         }
 
-        // Seed DNS Settings (Standard Privacy DNS)
         let dns_count: i64 = conn.query_row("SELECT COUNT(*) FROM dns_settings", [], |r| r.get(0))?;
         if dns_count == 0 {
             conn.execute(
@@ -183,7 +180,6 @@ impl Database {
             )?;
         }
 
-        // Seed Standard Routing Rules (RFC1918 Private CIDRs & Localhost Bypass)
         let rules_count: i64 = conn.query_row("SELECT COUNT(*) FROM routing_rules", [], |r| r.get(0))?;
         if rules_count == 0 {
             let now = chrono::Utc::now().to_rfc3339();
@@ -207,7 +203,6 @@ impl Database {
         Ok(())
     }
 
-    // --- Profiles CRUD ---
 
     pub fn get_profiles(&self) -> Result<Vec<Profile>> {
         let conn = self.conn.lock();
@@ -415,7 +410,6 @@ impl Database {
         Ok(())
     }
 
-    // --- Subscriptions CRUD ---
 
     pub fn get_subscriptions(&self) -> Result<Vec<Subscription>> {
         let conn = self.conn.lock();
@@ -486,7 +480,6 @@ impl Database {
         Ok(())
     }
 
-    // --- Routing Rules CRUD ---
 
     pub fn get_routing_rules(&self) -> Result<Vec<RoutingRule>> {
         let conn = self.conn.lock();
@@ -582,7 +575,6 @@ impl Database {
         Ok(())
     }
 
-    // --- Settings & DNS ---
 
     pub fn get_settings(&self) -> Result<AppSettings> {
         let conn = self.conn.lock();

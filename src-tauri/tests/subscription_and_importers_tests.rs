@@ -39,8 +39,6 @@ fn test_parse_trojan_share_link() {
 
 #[test]
 fn test_parse_shadowsocks_share_link() {
-    // ss://base64(aes-256-gcm:pass123)@london.ss.org:8388#London%20Node
-    // "aes-256-gcm:pass123" base64 is "YWVzLTI1Ni1nY206cGFzczEyMw=="
     let link = "ss://YWVzLTI1Ni1nY206cGFzczEyMw==@london.ss.org:8388#London%20Fast";
     let profile = SubscriptionParser::parse_shadowsocks_link(link, "test-sub")
         .expect("Failed to parse Shadowsocks link");

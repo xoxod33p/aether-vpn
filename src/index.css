@@ -13,7 +13,6 @@
   }
 }
 
-/* Custom scrollbars */
 ::-webkit-scrollbar {
   width: 5px;
   height: 5px;
@@ -32,7 +31,6 @@
   background: rgba(255, 255, 255, 0.35);
 }
 
-/* Minimalist Jet Black & Soft White Glass styling */
 .glass-panel {
   background: rgba(10, 10, 10, 0.95);
   backdrop-filter: blur(16px);
@@ -51,4 +49,81 @@
   border-color: rgba(255, 255, 255, 0.25);
   background: rgba(22, 22, 22, 0.95);
   box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
+}
+
+@keyframes sonar-wave {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.75;
+  }
+  60% {
+    opacity: 0.25;
+  }
+  100% {
+    transform: scale(1.65);
+    opacity: 0;
+  }
+}
+
+@keyframes location-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.25);
+    opacity: 0.3;
+  }
+}
+
+@keyframes radar-sweep {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes signal-wave {
+  0%, 100% {
+    height: 4px;
+    opacity: 0.35;
+  }
+  50% {
+    height: 12px;
+    opacity: 1;
+  }
+}
+
+.animate-sonar-1 {
+  animation: sonar-wave 2.6s cubic-bezier(0.2, 0.8, 0.4, 1) infinite;
+}
+
+.animate-sonar-2 {
+  animation: sonar-wave 2.6s cubic-bezier(0.2, 0.8, 0.4, 1) infinite 0.85s;
+}
+
+.animate-sonar-3 {
+  animation: sonar-wave 2.6s cubic-bezier(0.2, 0.8, 0.4, 1) infinite 1.7s;
+}
+
+.animate-location-beacon {
+  animation: location-pulse 2s ease-in-out infinite;
+}
+
+.animate-radar-spin {
+  animation: radar-sweep 3.5s linear infinite;
+}
+
+.animate-signal-1 {
+  animation: signal-wave 1.2s ease-in-out infinite 0.1s;
+}
+
+.animate-signal-2 {
+  animation: signal-wave 1.2s ease-in-out infinite 0.3s;
+}
+
+.animate-signal-3 {
+  animation: signal-wave 1.2s ease-in-out infinite 0.5s;
 }

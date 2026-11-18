@@ -83,7 +83,6 @@ export function useVpnStore() {
   const [durationSecs, setDurationSecs] = useState<number>(0);
   const [trafficHistory, setTrafficHistory] = useState<Array<{ time: string; down: number; up: number }>>([]);
 
-  // Load persistent configurations from SQLite database on startup
   useEffect(() => {
     let mounted = true;
     async function loadData() {
@@ -112,7 +111,6 @@ export function useVpnStore() {
         console.warn('Initial data load error:', e);
       }
 
-      // Detect real local ISP public IP on startup
       try {
         const ipInfo = await vpnApi.getRealPublicIp();
         if (mounted && ipInfo && ipInfo.ip) {
@@ -126,9 +124,7 @@ export function useVpnStore() {
             },
           }));
         }
-      } catch {
-        // Network not yet ready or offline
-      }
+      } catch {}
     }
 
     loadData();
@@ -137,7 +133,6 @@ export function useVpnStore() {
     };
   }, []);
 
-  // Connection duration counter
   useEffect(() => {
     let timer: ReturnType<typeof setInterval> | null = null;
     if (connectionInfo.status === 'Connected') {
@@ -152,7 +147,6 @@ export function useVpnStore() {
     };
   }, [connectionInfo.status]);
 
-  // Real traffic telemetry poller from sing-box Clash REST API
   useEffect(() => {
     const timer = setInterval(async () => {
       if (connectionInfo.status === 'Connected') {
@@ -173,9 +167,7 @@ export function useVpnStore() {
             if (next.length > 30) next.shift();
             return next;
           });
-        } catch {
-          // Keep prior stats if transient read failure
-        }
+        } catch {}
       } else {
         setTrafficStats((prev) => ({
           ...prev,
@@ -189,7 +181,6 @@ export function useVpnStore() {
     return () => clearInterval(timer);
   }, [connectionInfo.status]);
 
-  // Periodic log syncer
   useEffect(() => {
     const logTimer = setInterval(async () => {
       try {
@@ -214,7 +205,6 @@ export function useVpnStore() {
     setLogs((prev) => [newEntry, ...prev.slice(0, 499)]);
   }, []);
 
-  // Connect to active profile
   const connect = useCallback(async () => {
     const targetProfile = profiles.find((p) => p.id === selectedProfileId);
     if (!targetProfile) {
@@ -243,7 +233,6 @@ export function useVpnStore() {
 
       addLog('info', 'Secure handshake established. Virtual tunnel active.');
 
-      // Detect real exit IP via tunnel
       setTimeout(async () => {
         try {
           const ipInfo = await vpnApi.getRealPublicIp();
@@ -271,7 +260,6 @@ export function useVpnStore() {
     }
   }, [profiles, selectedProfileId, settings.defaultMode, addLog]);
 
-  // Disconnect active connection
   const disconnect = useCallback(async () => {
     setConnectionInfo((prev) => ({ ...prev, status: 'Disconnecting' }));
     addLog('info', 'Tearing down active tunnel. Restoring OS routing table and DNS...');
@@ -288,7 +276,6 @@ export function useVpnStore() {
       });
       addLog('info', 'Tunnel disconnected cleanly. System networking restored.');
 
-      // Re-detect local ISP IP after disconnection
       setTimeout(async () => {
         try {
           const ipInfo = await vpnApi.getRealPublicIp();
@@ -311,7 +298,6 @@ export function useVpnStore() {
     }
   }, [addLog]);
 
-  // Real TCP Handshake latency test
   const testProfileLatency = useCallback(async (id: string) => {
     const profile = profiles.find((p) => p.id === id);
     if (!profile) return;

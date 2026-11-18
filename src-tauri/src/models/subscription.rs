@@ -6,7 +6,7 @@ pub struct Subscription {
     pub id: String,
     pub name: String,
     pub url: String,
-    pub format: String, // 'singbox', 'v2ray', 'clash', 'shadowsocks'
+    pub format: String,
     pub auto_update: bool,
     pub update_interval_hours: u32,
     #[serde(skip_serializing_if = "Option::is_none")]

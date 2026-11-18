@@ -4,7 +4,6 @@ use tracing::{info, warn};
 pub struct KillSwitchManager;
 
 impl KillSwitchManager {
-    /// Enable the firewall kill switch to prevent leaks outside the VPN tunnel
     pub fn enable(vpn_server_ip: &str, vpn_port: u16) -> Result<(), String> {
         info!("Enabling VPN kill switch for server {}:{}", vpn_server_ip, vpn_port);
 
@@ -25,7 +24,6 @@ impl KillSwitchManager {
         }
     }
 
-    /// Disable the firewall kill switch and restore normal connectivity
     pub fn disable() -> Result<(), String> {
         info!("Disabling VPN kill switch");
 
@@ -47,10 +45,8 @@ impl KillSwitchManager {
 
     #[cfg(target_os = "windows")]
     fn enable_windows(vpn_server_ip: &str, vpn_port: u16) -> Result<(), String> {
-        // Clean any existing rules first for idempotency
         let _ = Self::disable_windows();
 
-        // 1. Allow Loopback (127.0.0.1 and ::1)
         let _ = crate::core::silent_command("netsh")
             .args([
                 "advfirewall", "firewall", "add", "rule",
@@ -61,7 +57,6 @@ impl KillSwitchManager {
             ])
             .output();
 
-        // 2. Allow Local LAN Subnets
         let _ = crate::core::silent_command("netsh")
             .args([
                 "advfirewall", "firewall", "add", "rule",
@@ -72,7 +67,6 @@ impl KillSwitchManager {
             ])
             .output();
 
-        // 3. Allow Traffic to the VPN Endpoint itself
         let remote_port_arg = format!("{}", vpn_port);
         let _ = crate::core::silent_command("netsh")
             .args([
@@ -86,7 +80,6 @@ impl KillSwitchManager {
             ])
             .output();
 
-        // 4. Block All other Outbound traffic
         let output = crate::core::silent_command("netsh")
             .args([
                 "advfirewall", "firewall", "add", "rule",
@@ -109,7 +102,6 @@ impl KillSwitchManager {
 
     #[cfg(target_os = "windows")]
     fn disable_windows() -> Result<(), String> {
-        // Delete ONLY our explicitly created rules silently
         let rules = [
             "AetherVPN_KS_BlockAll",
             "AetherVPN_KS_AllowVPN",
@@ -133,12 +125,10 @@ impl KillSwitchManager {
 
         let _ = Self::disable_linux();
 
-        // Allow loopback
         let _ = Command::new("iptables")
             .args(["-A", "OUTPUT", "-o", "lo", "-m", "comment", "--comment", "AetherVPN_KS_Loopback", "-j", "ACCEPT"])
             .output();
 
-        // Allow VPN server traffic
         let _ = Command::new("iptables")
             .args([
                 "-A", "OUTPUT", "-d", vpn_server_ip, "-p", "tcp", "--dport", &vpn_port.to_string(),
@@ -152,12 +142,10 @@ impl KillSwitchManager {
             ])
             .output();
 
-        // Allow tun interface traffic
         let _ = Command::new("iptables")
             .args(["-A", "OUTPUT", "-o", "tun+", "-m", "comment", "--comment", "AetherVPN_KS_TUN", "-j", "ACCEPT"])
             .output();
 
-        // Drop rest of output traffic
         let _ = Command::new("iptables")
             .args(["-A", "OUTPUT", "-m", "comment", "--comment", "AetherVPN_KS_Block", "-j", "DROP"])
             .output();
@@ -170,7 +158,6 @@ impl KillSwitchManager {
     fn disable_linux() -> Result<(), String> {
         use std::process::Command;
 
-        // Delete rules with comments
         let _ = Command::new("iptables")
             .args(["-D", "OUTPUT", "-m", "comment", "--comment", "AetherVPN_KS_Block", "-j", "DROP"])
             .output();

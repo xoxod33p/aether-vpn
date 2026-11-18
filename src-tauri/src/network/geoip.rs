@@ -13,7 +13,6 @@ pub struct PublicIpInfo {
 pub struct GeoIpService;
 
 impl GeoIpService {
-    /// Detect the current public IP address and geolocation via real IP detection services
     pub async fn fetch_current_ip() -> Result<PublicIpInfo, String> {
         let client = match reqwest::Client::builder()
             .timeout(std::time::Duration::from_secs(5))
@@ -23,7 +22,6 @@ impl GeoIpService {
             Err(e) => return Err(format!("Failed to build HTTP client: {}", e)),
         };
 
-        // 1. Try ip-api.com
         if let Ok(resp) = client
             .get("http://ip-api.com/json/?fields=status,message,country,countryCode,city,query,org")
             .send()
@@ -49,7 +47,6 @@ impl GeoIpService {
             }
         }
 
-        // 2. Secondary fallback: ipwho.is
         if let Ok(resp) = client.get("https://ipwho.is/").send().await {
             if let Ok(json) = resp.json::<serde_json::Value>().await {
                 if json["success"].as_bool() == Some(true) {
@@ -71,7 +68,6 @@ impl GeoIpService {
             }
         }
 
-        // 3. Simple IP fallback: api64.ipify.org
         if let Ok(resp) = client.get("https://api64.ipify.org?format=json").send().await {
             if let Ok(json) = resp.json::<serde_json::Value>().await {
                 if let Some(ip) = json["ip"].as_str() {
@@ -89,7 +85,6 @@ impl GeoIpService {
         Err("Unable to detect public IP address. Please check your network connection.".to_string())
     }
 
-    /// Perform a real DNS leak test using edns probe endpoint
     pub async fn run_dns_leak_probe() -> Result<DnsLeakResult, String> {
         let client = match reqwest::Client::builder()
             .timeout(std::time::Duration::from_secs(8))

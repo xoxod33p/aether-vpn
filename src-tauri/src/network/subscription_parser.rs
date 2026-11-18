@@ -8,9 +8,7 @@ use crate::models::{Profile, Subscription, VpnProtocol};
 pub struct SubscriptionParser;
 
 impl SubscriptionParser {
-    /// Fetch from remote URL and parse into Profile instances
     pub async fn fetch_and_parse(sub: &Subscription) -> Result<Vec<Profile>, String> {
-        // Validate URL
         let parsed_url = Url::parse(&sub.url).map_err(|e| format!("Invalid subscription URL: {}", e))?;
         if parsed_url.scheme() != "http" && parsed_url.scheme() != "https" {
             return Err("Subscription URL must use HTTP or HTTPS protocol".to_string());
@@ -42,11 +40,9 @@ impl SubscriptionParser {
         Self::parse_content(&body, &sub.id, &sub.format)
     }
 
-    /// Parse subscription text content into profiles
     pub fn parse_content(content: &str, subscription_id: &str, preferred_format: &str) -> Result<Vec<Profile>, String> {
         let trimmed = content.trim();
 
-        // 1. Try sing-box JSON if preferred or starts with JSON object '{'
         if preferred_format == "singbox" || trimmed.starts_with('{') {
             if let Ok(profiles) = Self::parse_singbox_json(trimmed, subscription_id) {
                 if !profiles.is_empty() {
@@ -55,7 +51,6 @@ impl SubscriptionParser {
             }
         }
 
-        // 2. Try Clash YAML if preferred or contains proxies:
         if preferred_format == "clash" || trimmed.contains("proxies:") {
             if let Ok(profiles) = Self::parse_clash_yaml(trimmed, subscription_id) {
                 if !profiles.is_empty() {
@@ -64,7 +59,6 @@ impl SubscriptionParser {
             }
         }
 
-        // 3. Try base64 decoded share links (common in V2Ray subscriptions)
         if let Ok(decoded_bytes) = base64::engine::general_purpose::STANDARD.decode(trimmed.replace(['\r', '\n', ' '], "")) {
             if let Ok(decoded_str) = String::from_utf8(decoded_bytes) {
                 let profiles = Self::parse_share_links(&decoded_str, subscription_id);
@@ -74,7 +68,6 @@ impl SubscriptionParser {
             }
         }
 
-        // 4. Try raw share links directly
         let profiles = Self::parse_share_links(trimmed, subscription_id);
         if !profiles.is_empty() {
             return Ok(profiles);
@@ -83,7 +76,6 @@ impl SubscriptionParser {
         Err("Unable to parse subscription content: unsupported format or empty server list".to_string())
     }
 
-    /// Parse lines of share links (vless://, vmess://, trojan://, ss://)
     pub fn parse_share_links(content: &str, subscription_id: &str) -> Vec<Profile> {
         let mut profiles = Vec::new();
 
@@ -115,7 +107,6 @@ impl SubscriptionParser {
         profiles
     }
 
-    /// Parse vless://uuid@host:port?params#name
     pub fn parse_vless_link(link: &str, subscription_id: &str) -> Result<Profile, String> {
         let url = Url::parse(link).map_err(|e| format!("Invalid VLESS URL: {}", e))?;
         let host = url.host_str().ok_or("Missing host in VLESS URL")?.to_string();
@@ -176,7 +167,6 @@ impl SubscriptionParser {
         })
     }
 
-    /// Parse vmess://base64(json)
     pub fn parse_vmess_link(link: &str, subscription_id: &str) -> Result<Profile, String> {
         let b64 = link.trim_start_matches("vmess://");
         let decoded = base64::engine::general_purpose::STANDARD
@@ -243,7 +233,6 @@ impl SubscriptionParser {
         })
     }
 
-    /// Parse trojan://password@host:port?sni=...#name
     pub fn parse_trojan_link(link: &str, subscription_id: &str) -> Result<Profile, String> {
         let url = Url::parse(link).map_err(|e| format!("Invalid Trojan URL: {}", e))?;
         let host = url.host_str().ok_or("Missing host in Trojan URL")?.to_string();
@@ -295,7 +284,6 @@ impl SubscriptionParser {
         })
     }
 
-    /// Parse ss://...#name (Shadowsocks standard URI or base64 userinfo)
     pub fn parse_shadowsocks_link(link: &str, subscription_id: &str) -> Result<Profile, String> {
         let raw = link.trim_start_matches("ss://");
         let (main_part, tag) = match raw.split_once('#') {
@@ -308,7 +296,6 @@ impl SubscriptionParser {
         let mut host = "".to_string();
         let mut port = 8388;
 
-        // Try scheme 1: ss://base64(cipher:password@host:port)
         if let Ok(decoded_bytes) = base64::engine::general_purpose::STANDARD.decode(main_part) {
             if let Ok(decoded_str) = String::from_utf8(decoded_bytes) {
                 if let Some((userinfo, hostport)) = decoded_str.split_once('@') {
@@ -324,7 +311,6 @@ impl SubscriptionParser {
             }
         }
 
-        // Try scheme 2: ss://base64(cipher:password)@host:port
         if host.is_empty() {
             if let Some((b64_userinfo, hostport)) = main_part.split_once('@') {
                 if let Ok(decoded_bytes) = base64::engine::general_purpose::STANDARD.decode(b64_userinfo) {
@@ -377,7 +363,6 @@ impl SubscriptionParser {
         })
     }
 
-    /// Parse sing-box JSON configuration
     pub fn parse_singbox_json(json_str: &str, subscription_id: &str) -> Result<Vec<Profile>, String> {
         let root: serde_json::Value = serde_json::from_str(json_str)
             .map_err(|e| format!("Invalid sing-box JSON: {}", e))?;
@@ -396,7 +381,7 @@ impl SubscriptionParser {
             let port = out.get("server_port").and_then(|p| p.as_u64()).unwrap_or(0) as u16;
 
             if server.is_empty() || port == 0 {
-                continue; // Skip non-proxy or internal outbounds like 'direct', 'block', 'dns'
+                continue;
             }
 
             let profile_opt = match out_type {
@@ -512,7 +497,6 @@ impl SubscriptionParser {
         Ok(profiles)
     }
 
-    /// Parse Clash YAML configuration
     pub fn parse_clash_yaml(yaml_str: &str, subscription_id: &str) -> Result<Vec<Profile>, String> {
         let value: serde_yaml::Value = serde_yaml::from_str(yaml_str)
             .map_err(|e| format!("Invalid Clash YAML: {}", e))?;
@@ -637,7 +621,6 @@ impl SubscriptionParser {
     }
 }
 
-/// Helper function to decode URL percent encoding
 fn urlencoding_decode(val: &str) -> String {
     urlencoding_decode_lossy(val)
 }
@@ -665,7 +648,6 @@ fn urlencoding_decode_lossy(val: &str) -> String {
     result
 }
 
-/// Heuristic to extract 2-letter country code from server node names
 fn extract_country_code_from_name(name: &str) -> Option<String> {
     let upper = name.to_uppercase();
 

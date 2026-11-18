@@ -19,10 +19,9 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({ store }) => {
   const { trafficStats, trafficHistory, durationSecs, connectionInfo, selectedProfile } = store;
   const isConnected = connectionInfo.status === 'Connected';
 
-  // SVG Chart calculation
   const maxBytes = Math.max(
     ...trafficHistory.map((h) => Math.max(h.down, h.up)),
-    1024 * 1024 * 5 // default 5 MB/s floor
+    1024 * 1024 * 5
   );
 
   const chartWidth = 600;

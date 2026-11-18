@@ -12,7 +12,6 @@ impl SingboxConfigBuilder {
     ) -> Value {
         let outbound = Self::build_profile_outbound(profile);
 
-        // Build inbounds based on operating mode
         let mut inbounds = Vec::new();
         match settings.default_mode {
             OperatingMode::Tun => {
@@ -42,7 +41,6 @@ impl SingboxConfigBuilder {
                     "sniff": true,
                     "mtu": settings.mtu
                 }));
-                // Also provide a local mixed inbound for local applications
                 inbounds.push(json!({
                     "type": "mixed",
                     "tag": "mixed-in",
@@ -62,7 +60,6 @@ impl SingboxConfigBuilder {
             }
         }
 
-        // Standard outbounds
         let outbounds = vec![
             outbound,
             json!({
@@ -71,8 +68,6 @@ impl SingboxConfigBuilder {
             }),
         ];
 
-        // Extract domain names associated with the VPN server to ensure they bypass the proxy
-        // and resolve locally without causing DNS deadlocks/loops
         let mut direct_domains = Vec::new();
         if !profile.server.is_empty() {
             direct_domains.push(profile.server.clone());
@@ -90,7 +85,6 @@ impl SingboxConfigBuilder {
         direct_domains.sort();
         direct_domains.dedup();
 
-        // Route rules (modern sing-box 1.11+ syntax)
         let mut route_rules = vec![
             json!({
                 "protocol": "dns",
@@ -100,7 +94,6 @@ impl SingboxConfigBuilder {
                 "port": [53],
                 "action": "hijack-dns"
             }),
-            // Ensure local network and loopback bypass proxy for LAN apps, screenshots & gaming
             json!({
                 "ip_is_private": true,
                 "outbound": "direct"
@@ -112,7 +105,6 @@ impl SingboxConfigBuilder {
             }),
         ];
 
-        // Ensure connections to the VPN server endpoint bypass the proxy and go direct
         if !direct_domains.is_empty() {
             route_rules.push(json!({
                 "domain": direct_domains,
@@ -165,7 +157,6 @@ impl SingboxConfigBuilder {
             route_rules.push(rule_obj);
         }
 
-        // DNS Configuration
         let primary_addr = dns.primary_dns_or_fallback();
         let dns_servers = vec![
             json!({
@@ -193,7 +184,6 @@ impl SingboxConfigBuilder {
             }),
         ];
 
-        // Route proxy endpoint domains through local-dns to prevent loopback
         if !direct_domains.is_empty() {
             dns_rules.push(json!({
                 "domain": direct_domains,

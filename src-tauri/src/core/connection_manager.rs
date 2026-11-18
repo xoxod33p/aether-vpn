@@ -72,7 +72,6 @@ impl ConnectionManager {
         info!("Starting connection for profile '{}' ({}:{})", profile.name, profile.server, profile.port);
         crate::core::append_log("info", &format!("Initiating connection to '{}' ({}:{})...", profile.name, profile.server, profile.port), Some("core::conn"));
 
-        // Update state to Connecting
         {
             let mut info = self.info.write();
             info.status = ConnectionStatus::Connecting;
@@ -84,10 +83,8 @@ impl ConnectionManager {
         let dns = self.db.get_dns_config().unwrap_or_default();
         let rules = self.db.get_routing_rules().unwrap_or_default();
 
-        // Build valid sing-box JSON configuration
         let config_json = SingboxConfigBuilder::build(&profile, &settings, &dns, &rules);
 
-        // Start sing-box child process
         if let Err(err) = self.process_mgr.start(config_json).await {
             let mut info = self.info.write();
             info.status = ConnectionStatus::Error;
@@ -96,7 +93,6 @@ impl ConnectionManager {
             return Err(err);
         }
 
-        // Enable Kill Switch if enabled in settings
         if settings.kill_switch_enabled {
             if let Err(e) = KillSwitchManager::enable(&profile.server, profile.port) {
                 warn!("Kill switch activation warning: {}", e);
@@ -106,12 +102,10 @@ impl ConnectionManager {
             }
         }
 
-        // Optimize Windows TUN adapter bindings for NCSI (Network Connectivity Status Indicator)
         if settings.default_mode == OperatingMode::Tun && !settings.enable_ipv6 {
             #[cfg(target_os = "windows")]
             {
                 tokio::spawn(async {
-                    // Give Wintun driver 1.5 seconds to register the virtual adapter in Windows
                     tokio::time::sleep(tokio::time::Duration::from_millis(1500)).await;
                     let ps_cmd = "Disable-NetAdapterBinding -Name 'AetherTun' -ComponentID 'ms_tcpip6' -Confirm:$false -ErrorAction SilentlyContinue; Get-NetConnectionProfile -InterfaceAlias 'AetherTun' | Out-Null";
                     let _ = crate::core::silent_command("powershell")
@@ -122,7 +116,6 @@ impl ConnectionManager {
             }
         }
 
-        // Configure system proxy if SystemProxy mode
         if settings.default_mode == OperatingMode::SystemProxy {
             #[cfg(target_os = "windows")]
             {
@@ -159,7 +152,6 @@ impl ConnectionManager {
         *self.info.write() = updated_info.clone();
         crate::core::append_log("info", "Encrypted connection established. Starting live Clash traffic poller.", Some("core::conn"));
 
-        // Detect real tunnel public IP asynchronously
         let info_ip_check = self.info.clone();
         tokio::spawn(async move {
             tokio::time::sleep(std::time::Duration::from_millis(1500)).await;
@@ -177,7 +169,6 @@ impl ConnectionManager {
             }
         });
 
-        // Spawn background poller task for Clash API traffic & health monitoring
         let stats_arc = self.stats.clone();
         let info_arc = self.info.clone();
         let process_mgr_arc = self.process_mgr.clone();
@@ -188,7 +179,6 @@ impl ConnectionManager {
             loop {
                 interval.tick().await;
 
-                // Break loop if disconnected
                 {
                     let current = info_arc.read();
                     if current.status != ConnectionStatus::Connected {
@@ -196,7 +186,6 @@ impl ConnectionManager {
                     }
                 }
 
-                // Check process health
                 if !process_mgr_arc.is_running().await {
                     let err_msg = process_mgr_arc.get_last_error()
                         .unwrap_or_else(|| "VPN core terminated unexpectedly".to_string());
@@ -208,7 +197,6 @@ impl ConnectionManager {
                     break;
                 }
 
-                // Poll Clash API for real traffic
                 TrafficMonitor::fetch_clash_traffic(clash_port, stats_arc.clone()).await;
             }
         });
@@ -220,13 +208,10 @@ impl ConnectionManager {
         info!("Tearing down connection and restoring networking...");
         crate::core::append_log("info", "Tearing down connection and restoring networking...", Some("core::conn"));
 
-        // Stop sing-box engine
         let _ = self.process_mgr.stop().await;
 
-        // Disable Kill Switch rules
         let _ = KillSwitchManager::disable();
 
-        // Restore system proxy if enabled
         let backup = self.proxy_backup.write().take();
         #[cfg(target_os = "windows")]
         {
@@ -249,7 +234,6 @@ impl ConnectionManager {
 
         *self.info.write() = disconnected_info.clone();
 
-        // Clear live throughput
         {
             let mut s = self.stats.write();
             s.download_speed_bps = 0;
@@ -261,7 +245,6 @@ impl ConnectionManager {
         info!("Connection torn down. Networking restored.");
         crate::core::append_log("info", "Tunnel disconnected cleanly. System networking restored.", Some("core::conn"));
 
-        // Asynchronously re-detect local public IP
         let info_disc_ip = self.info.clone();
         tokio::spawn(async move {
             if let Ok(ip_info) = GeoIpService::fetch_current_ip().await {

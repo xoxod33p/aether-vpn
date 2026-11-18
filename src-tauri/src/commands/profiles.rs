@@ -38,7 +38,7 @@ pub async fn test_profile_latency(id: String, db: State<'_, Database>) -> Result
         Ok(ms) => ms,
         Err(err) => {
             warn!("Latency test failed: {}", err);
-            999 // Mark unreachable / high latency
+            999
         }
     };
 

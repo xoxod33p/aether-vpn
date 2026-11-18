@@ -6,12 +6,10 @@ use tracing::info;
 pub struct LatencyTester;
 
 impl LatencyTester {
-    /// Measure round-trip TCP connection time in milliseconds
     pub async fn measure_tcp_latency(host: &str, port: u16, timeout_duration: Duration) -> Result<u32, String> {
         let target = format!("{}:{}", host, port);
         let start = Instant::now();
 
-        // Perform DNS resolution and TCP 3-way handshake with timeout
         let result = timeout(timeout_duration, TcpStream::connect(&target)).await;
 
         match result {

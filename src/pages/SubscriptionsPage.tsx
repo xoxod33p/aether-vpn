@@ -63,7 +63,6 @@ export const SubscriptionsPage: React.FC<SubscriptionsPageProps> = ({ store }) =
         updateIntervalHours: 24,
       });
 
-      // Automatically trigger update
       handleUpdate(created.id, created.name);
     } catch (err: any) {
       addLog('error', `Failed to add subscription: ${err.message}`);

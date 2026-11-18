@@ -1,4 +1,13 @@
 fn main() {
+    let dist_dir = std::path::Path::new("../dist");
+    if !dist_dir.exists() {
+        let _ = std::fs::create_dir_all(dist_dir);
+        let index_file = dist_dir.join("index.html");
+        if !index_file.exists() {
+            let _ = std::fs::write(index_file, "<!doctype html><html><body></body></html>");
+        }
+    }
+
     println!("cargo:rerun-if-changed=icons/icon.ico");
     println!("cargo:rerun-if-changed=icons/icon.png");
     println!("cargo:rerun-if-changed=icons/32x32.png");

@@ -1,11 +1,9 @@
 import { Profile, ConnectionInfo, TrafficStats, AppSettings, Subscription, RoutingRule, DnsConfig, LogEntry } from '../types';
 
-// Safe check if running in Tauri
 export const isTauri = (): boolean => {
   return typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
 };
 
-// Generic safe invoke wrapper
 async function safeInvoke<T>(cmd: string, args?: Record<string, unknown>, fallback?: T): Promise<T> {
   if (isTauri()) {
     try {
@@ -17,7 +15,6 @@ async function safeInvoke<T>(cmd: string, args?: Record<string, unknown>, fallba
       throw err;
     }
   } else {
-    // In web preview fallback
     if (fallback !== undefined) return fallback;
     throw new Error(`Tauri environment not available for ${cmd}`);
   }
@@ -40,7 +37,6 @@ export interface DnsLeakResult {
 }
 
 export const vpnApi = {
-  // Connection
   connect: async (profileId: string): Promise<ConnectionInfo> => {
     return safeInvoke<ConnectionInfo>('connect_vpn', { profileId }, {
       status: 'Connected',
@@ -94,7 +90,6 @@ export const vpnApi = {
     return safeInvoke<DnsLeakResult>('run_dns_leak_test');
   },
 
-  // Profiles
   getProfiles: async (): Promise<Profile[]> => {
     return safeInvoke<Profile[]>('get_profiles', {}, []);
   },
@@ -115,7 +110,6 @@ export const vpnApi = {
     return safeInvoke<Profile>('import_profile_link', { link });
   },
 
-  // Subscriptions
   getSubscriptions: async (): Promise<Subscription[]> => {
     return safeInvoke<Subscription[]>('get_subscriptions', {}, []);
   },
@@ -132,7 +126,6 @@ export const vpnApi = {
     return safeInvoke<void>('delete_subscription', { id });
   },
 
-  // Routing
   getRoutingRules: async (): Promise<RoutingRule[]> => {
     return safeInvoke<RoutingRule[]>('get_routing_rules', {}, []);
   },
@@ -145,7 +138,6 @@ export const vpnApi = {
     return safeInvoke<void>('delete_routing_rule', { id });
   },
 
-  // DNS
   getDnsConfig: async (): Promise<DnsConfig> => {
     return safeInvoke<DnsConfig>('get_dns_config', {}, {
       providerType: 'doh',
@@ -160,7 +152,6 @@ export const vpnApi = {
     return safeInvoke<DnsConfig>('save_dns_config', { config }, config);
   },
 
-  // Settings
   getSettings: async (): Promise<AppSettings> => {
     return safeInvoke<AppSettings>('get_settings', {}, {
       theme: 'dark',
@@ -185,7 +176,6 @@ export const vpnApi = {
     return safeInvoke<AppSettings>('save_settings', { settings }, settings);
   },
 
-  // Logs
   getLogs: async (): Promise<LogEntry[]> => {
     return safeInvoke<LogEntry[]>('get_logs', {}, []);
   },

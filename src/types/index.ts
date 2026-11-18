@@ -23,34 +23,28 @@ export interface Profile {
   protocol: VpnProtocol;
   server: string;
   port: number;
-  // Auth details
   username?: string;
   password?: string;
-  uuid?: string; // VLESS / VMess
-  cipher?: string; // Shadowsocks
-  // TLS Settings
+  uuid?: string;
+  cipher?: string;
   tlsEnabled?: boolean;
   serverName?: string;
   allowInsecure?: boolean;
   alpn?: string[];
   realityPublicKey?: string;
   realityShortId?: string;
-  // Transport
   transportType?: 'tcp' | 'ws' | 'grpc' | 'http' | 'httpupgrade';
   transportPath?: string;
   transportHost?: string;
-  // V2Ray advanced & XTLS
   flow?: string;
   fingerprint?: string;
   packetEncoding?: string;
   alterId?: number;
-  // WireGuard
   wgPrivateKey?: string;
   wgPublicKey?: string;
   wgAddress?: string;
   wgDns?: string;
   wgMtu?: number;
-  // Metadata
   countryCode?: string;
   groupName?: string;
   isFavorite: boolean;

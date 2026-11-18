@@ -24,7 +24,6 @@ impl ProcessManager {
         self.last_error.lock().clone()
     }
 
-    /// Kills any lingering sing-box processes on the system with zero console window popup
     pub fn kill_orphans() {
         #[cfg(windows)]
         {
@@ -42,7 +41,6 @@ impl ProcessManager {
     }
 
     pub fn find_singbox_binary() -> Result<PathBuf, String> {
-        // 1. Check relative to current executable directory (production/installed mode)
         if let Ok(exe_path) = std::env::current_exe() {
             if let Some(parent) = exe_path.parent() {
                 let exe_candidates = [
@@ -64,7 +62,6 @@ impl ProcessManager {
             }
         }
 
-        // 2. Check local workspace and system directories
         let candidates = [
             PathBuf::from("src-tauri/bin/sing-box.exe"),
             PathBuf::from("src-tauri/bin/sing-box"),
@@ -91,7 +88,6 @@ impl ProcessManager {
             }
         }
 
-        // Search PATH
         if let Some(path_var) = std::env::var_os("PATH") {
             for p in std::env::split_paths(&path_var) {
                 let candidate = p.join("sing-box.exe");
@@ -111,7 +107,6 @@ impl ProcessManager {
     pub async fn start(&self, config_json: serde_json::Value) -> Result<(), String> {
         self.stop().await?;
 
-        // Ensure any lingering orphan process from a previous crash/session is terminated
         Self::kill_orphans();
         tokio::time::sleep(tokio::time::Duration::from_millis(150)).await;
 
@@ -193,7 +188,6 @@ impl ProcessManager {
             });
         }
 
-        // Validate that core didn't exit immediately on startup
         tokio::time::sleep(tokio::time::Duration::from_millis(350)).await;
         if let Ok(Some(exit_status)) = child.try_wait() {
             let detail = self.last_error.lock().clone()
@@ -224,7 +218,6 @@ impl ProcessManager {
             info!("VPN core process terminated.");
         }
 
-        // Clean any lingering orphans silently
         Self::kill_orphans();
 
         let mut cfg_guard = self.config_path.lock();
@@ -252,7 +245,6 @@ impl ProcessManager {
 }
 
 fn sanitize_log_line(line: &str) -> String {
-    // Strip ANSI escape sequences (e.g. \x1b[33mWARN\x1b[0m)
     let ansi_regex = regex::Regex::new(r"\x1B\[[0-9;]*[a-zA-Z]").unwrap();
     let cleaned = ansi_regex.replace_all(line, "");
 

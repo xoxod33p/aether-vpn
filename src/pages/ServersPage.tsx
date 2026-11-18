@@ -8,11 +8,14 @@ import {
   Trash2,
   Check,
   Globe,
-  Link as LinkIcon,
   X,
   AlertCircle,
   Zap,
   Pencil,
+  ChevronDown,
+  ChevronRight,
+  Shield,
+  Network,
 } from 'lucide-react';
 import { Profile, VpnProtocol } from '../types';
 import { VpnStoreType } from '../stores/useVpnStore';
@@ -46,12 +49,41 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
   const [isTestingAll, setIsTestingAll] = useState(false);
 
   const [addMode, setAddMode] = useState<'link' | 'manual'>('link');
+
   const [manualProtocol, setManualProtocol] = useState<VpnProtocol>('vless');
   const [manualName, setManualName] = useState('');
   const [manualServer, setManualServer] = useState('');
   const [manualPort, setManualPort] = useState(443);
+  const [manualCountryCode, setManualCountryCode] = useState('');
+
   const [manualUuid, setManualUuid] = useState('');
+  const [manualPassword, setManualPassword] = useState('');
+  const [manualUsername, setManualUsername] = useState('');
+  const [manualCipher, setManualCipher] = useState('');
+  const [manualAlterId, setManualAlterId] = useState(0);
+  const [manualFlow, setManualFlow] = useState('');
+  const [manualPacketEncoding, setManualPacketEncoding] = useState('xudp');
+
+  const [manualTlsEnabled, setManualTlsEnabled] = useState(true);
   const [manualSni, setManualSni] = useState('');
+  const [manualInsecure, setManualInsecure] = useState(false);
+  const [manualFingerprint, setManualFingerprint] = useState('chrome');
+  const [manualAlpn, setManualAlpn] = useState('');
+  const [manualRealityPubKey, setManualRealityPubKey] = useState('');
+  const [manualRealityShortId, setManualRealityShortId] = useState('');
+
+  const [manualTransport, setManualTransport] = useState<'tcp' | 'ws' | 'grpc' | 'http' | 'httpupgrade'>('tcp');
+  const [manualTransportPath, setManualTransportPath] = useState('');
+  const [manualTransportHost, setManualTransportHost] = useState('');
+
+  const [manualWgPrivateKey, setManualWgPrivateKey] = useState('');
+  const [manualWgPublicKey, setManualWgPublicKey] = useState('');
+  const [manualWgAddress, setManualWgAddress] = useState('10.14.0.2/32');
+  const [manualWgDns, setManualWgDns] = useState('');
+  const [manualWgMtu, setManualWgMtu] = useState(1420);
+
+  const [showTlsSection, setShowTlsSection] = useState(false);
+  const [showTransportSection, setShowTransportSection] = useState(false);
 
   const filteredProfiles = profiles
     .filter((p) => {
@@ -90,12 +122,42 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
     setAddMode('link');
     setImportText('');
     setImportError(null);
+
     setManualProtocol('vless');
     setManualName('');
     setManualServer('');
     setManualPort(443);
+    setManualCountryCode('');
+
     setManualUuid('');
+    setManualPassword('');
+    setManualUsername('');
+    setManualCipher('');
+    setManualAlterId(0);
+    setManualFlow('');
+    setManualPacketEncoding('xudp');
+
+    setManualTlsEnabled(true);
     setManualSni('');
+    setManualInsecure(false);
+    setManualFingerprint('chrome');
+    setManualAlpn('');
+    setManualRealityPubKey('');
+    setManualRealityShortId('');
+
+    setManualTransport('tcp');
+    setManualTransportPath('');
+    setManualTransportHost('');
+
+    setManualWgPrivateKey('');
+    setManualWgPublicKey('');
+    setManualWgAddress('10.14.0.2/32');
+    setManualWgDns('');
+    setManualWgMtu(1420);
+
+    setShowTlsSection(false);
+    setShowTransportSection(false);
+
     setIsAddModalOpen(true);
   };
 
@@ -104,12 +166,43 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
     setAddMode('manual');
     setImportText('');
     setImportError(null);
+
     setManualProtocol(profile.protocol);
-    setManualName(profile.name);
-    setManualServer(profile.server);
-    setManualPort(profile.port);
-    setManualUuid(profile.uuid || profile.password || '');
+    setManualName(profile.name || '');
+    setManualServer(profile.server || '');
+    setManualPort(profile.port || 443);
+    setManualCountryCode(profile.countryCode || '');
+
+    setManualUuid(profile.uuid || '');
+    setManualPassword(profile.password || '');
+    setManualUsername(profile.username || '');
+    setManualCipher(profile.cipher || '');
+    setManualAlterId(profile.alterId || 0);
+    setManualFlow(profile.flow || '');
+    setManualPacketEncoding(profile.packetEncoding || 'xudp');
+
+    const defaultTls = profile.protocol === 'vless' || profile.protocol === 'trojan' || profile.protocol === 'hysteria2';
+    setManualTlsEnabled(profile.tlsEnabled ?? defaultTls);
     setManualSni(profile.serverName || '');
+    setManualInsecure(profile.allowInsecure || false);
+    setManualFingerprint(profile.fingerprint || 'chrome');
+    setManualAlpn(profile.alpn ? profile.alpn.join(',') : '');
+    setManualRealityPubKey(profile.realityPublicKey || '');
+    setManualRealityShortId(profile.realityShortId || '');
+
+    setManualTransport(profile.transportType || 'tcp');
+    setManualTransportPath(profile.transportPath || '');
+    setManualTransportHost(profile.transportHost || '');
+
+    setManualWgPrivateKey(profile.wgPrivateKey || '');
+    setManualWgPublicKey(profile.wgPublicKey || '');
+    setManualWgAddress(profile.wgAddress || '10.14.0.2/32');
+    setManualWgDns(profile.wgDns || '');
+    setManualWgMtu(profile.wgMtu || 1420);
+
+    setShowTlsSection(Boolean(profile.tlsEnabled || profile.serverName || profile.realityPublicKey || profile.fingerprint));
+    setShowTransportSection(Boolean(profile.transportType && profile.transportType !== 'tcp'));
+
     setIsAddModalOpen(true);
   };
 
@@ -142,47 +235,77 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
       return;
     }
 
+    const alpnArray = manualAlpn.trim() ? manualAlpn.split(',').map((s) => s.trim()).filter(Boolean) : undefined;
+
+    const baseData: Partial<Profile> = {
+      name: manualName.trim(),
+      protocol: manualProtocol,
+      server: manualServer.trim(),
+      port: Number(manualPort) || 443,
+      countryCode: manualCountryCode.trim().toUpperCase() || undefined,
+
+      uuid: manualUuid.trim() || undefined,
+      password: manualPassword.trim() || undefined,
+      username: manualUsername.trim() || undefined,
+      cipher: manualCipher.trim() || undefined,
+      alterId: manualAlterId ? Number(manualAlterId) : undefined,
+      flow: manualFlow.trim() || undefined,
+      packetEncoding: manualPacketEncoding.trim() || undefined,
+
+      tlsEnabled: manualTlsEnabled,
+      serverName: manualSni.trim() || undefined,
+      allowInsecure: manualInsecure,
+      fingerprint: manualFingerprint.trim() || undefined,
+      alpn: alpnArray,
+      realityPublicKey: manualRealityPubKey.trim() || undefined,
+      realityShortId: manualRealityShortId.trim() || undefined,
+
+      transportType: manualTransport !== 'tcp' ? manualTransport : undefined,
+      transportPath: manualTransportPath.trim() || undefined,
+      transportHost: manualTransportHost.trim() || undefined,
+
+      wgPrivateKey: manualWgPrivateKey.trim() || undefined,
+      wgPublicKey: manualWgPublicKey.trim() || undefined,
+      wgAddress: manualWgAddress.trim() || undefined,
+      wgDns: manualWgDns.trim() || undefined,
+      wgMtu: manualWgMtu ? Number(manualWgMtu) : undefined,
+
+      updatedAt: new Date().toISOString(),
+    };
+
     if (editingProfile) {
       const updatedProfile: Profile = {
         ...editingProfile,
-        name: manualName.trim(),
-        protocol: manualProtocol,
-        server: manualServer.trim(),
-        port: Number(manualPort),
-        uuid: manualUuid.trim() || undefined,
-        password: manualUuid.trim() || undefined,
-        serverName: manualSni.trim() || undefined,
-        updatedAt: new Date().toISOString(),
+        ...baseData,
       };
       await saveProfile(updatedProfile);
     } else {
       const newProfile: Profile = {
         id: `profile-${Date.now()}`,
-        name: manualName.trim(),
-        protocol: manualProtocol,
-        server: manualServer.trim(),
-        port: Number(manualPort),
-        uuid: manualUuid.trim() || undefined,
-        password: manualUuid.trim() || undefined,
-        serverName: manualSni.trim() || undefined,
         isFavorite: false,
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
+        ...baseData,
+      } as Profile;
       await saveProfile(newProfile);
     }
 
     setIsAddModalOpen(false);
     setEditingProfile(null);
-    setManualName('');
-    setManualServer('');
-    setManualUuid('');
-    setManualSni('');
   };
+
+  const supportsTls =
+    manualProtocol === 'vless' ||
+    manualProtocol === 'vmess' ||
+    manualProtocol === 'trojan' ||
+    manualProtocol === 'hysteria2';
+
+  const supportsTransport =
+    manualProtocol === 'vless' ||
+    manualProtocol === 'vmess' ||
+    manualProtocol === 'trojan';
 
   return (
     <div className="flex flex-col h-full p-4 sm:p-5 max-w-md mx-auto w-full select-none">
-      
       <div className="flex items-center justify-between pb-3 border-b border-white/10 shrink-0">
         <div className="flex items-center gap-2">
           <Server className="w-4 h-4 text-white" />
@@ -193,7 +316,6 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
         </div>
 
         <div className="flex items-center gap-1.5">
-          
           <button
             onClick={handleTestAll}
             disabled={isTestingAll || profiles.length === 0}
@@ -204,7 +326,6 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
             <span className="hidden sm:inline">Ping</span>
           </button>
 
-          
           <button
             onClick={handleOpenAdd}
             className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white hover:bg-neutral-200 text-black text-xs font-bold shadow-md shadow-black transition-all cursor-pointer"
@@ -215,7 +336,6 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
         </div>
       </div>
 
-      
       <div className="relative my-3 shrink-0">
         <Search className="w-4 h-4 text-neutral-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
         <input
@@ -235,7 +355,6 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
         )}
       </div>
 
-      
       <div className="flex-1 overflow-y-auto space-y-2 pr-0.5">
         {filteredProfiles.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center text-neutral-400">
@@ -258,7 +377,6 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                     : 'bg-[#0d0d0d] hover:bg-[#141414] border-white/10 hover:border-white/25'
                 }`}
               >
-                
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-8 h-8 rounded-xl bg-[#050505] border border-white/10 flex items-center justify-center text-base shrink-0">
                     {profile.countryCode === 'SG'
@@ -297,9 +415,7 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                   </div>
                 </div>
 
-                
                 <div className="flex items-center gap-2 shrink-0">
-                  
                   {profile.latencyMs ? (
                     <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md border text-neutral-200 bg-white/10 border-white/15">
                       {profile.latencyMs}ms
@@ -317,7 +433,6 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                     </button>
                   )}
 
-                  
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -332,7 +447,6 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                     <Star className="w-3.5 h-3.5 fill-current" />
                   </button>
 
-                  
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -344,7 +458,6 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                     <Pencil className="w-3.5 h-3.5" />
                   </button>
 
-                  
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -355,7 +468,6 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
 
-                  
                   <div
                     className={`w-5 h-5 rounded-full flex items-center justify-center border transition-all ${
                       isSelected
@@ -372,29 +484,26 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
         )}
       </div>
 
-      
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4">
-          <div className="w-full max-w-sm bg-[#0d0d0d] border border-white/15 rounded-3xl p-5 shadow-2xl relative">
-            
-            <button
-              onClick={() => {
-                setIsAddModalOpen(false);
-                setEditingProfile(null);
-              }}
-              className="absolute right-4 top-4 text-neutral-400 hover:text-white p-1 cursor-pointer"
-            >
-              <X className="w-4 h-4" />
-            </button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-3 sm:p-4">
+          <div className="w-full max-w-md bg-[#0d0d0d] border border-white/15 rounded-3xl p-5 shadow-2xl relative max-h-[92vh] flex flex-col">
+            <div className="flex items-center justify-between pb-3 border-b border-white/10 shrink-0">
+              <h3 className="text-sm font-bold text-white">
+                {editingProfile ? 'Edit Server' : 'Add Server'}
+              </h3>
+              <button
+                onClick={() => {
+                  setIsAddModalOpen(false);
+                  setEditingProfile(null);
+                }}
+                className="text-neutral-400 hover:text-white p-1 cursor-pointer rounded-lg hover:bg-white/10 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
 
-            
-            <h3 className="text-sm font-bold text-white mb-3">
-              {editingProfile ? 'Edit Server' : 'Add Server'}
-            </h3>
-
-            
             {!editingProfile && (
-              <div className="flex bg-black p-1 rounded-xl border border-white/10 mb-3 text-xs">
+              <div className="flex bg-black p-1 rounded-xl border border-white/10 my-3 text-xs shrink-0">
                 <button
                   onClick={() => setAddMode('link')}
                   className={`flex-1 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
@@ -414,19 +523,18 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
               </div>
             )}
 
-            
             {!editingProfile && addMode === 'link' ? (
-              <div className="space-y-3">
+              <div className="space-y-3 pt-2">
                 <textarea
                   value={importText}
                   onChange={(e) => setImportText(e.target.value)}
                   placeholder="Paste link here (vless://, vmess://, ss://, trojan://, or Subscription URL)"
-                  rows={4}
+                  rows={5}
                   className="w-full bg-black border border-white/10 rounded-xl p-3 text-xs text-white placeholder-neutral-500 font-mono focus:outline-none focus:border-white/40 resize-none"
                 />
 
                 {importError && (
-                  <div className="flex items-center gap-1.5 text-xs text-red-400 bg-red-950/40 p-2 rounded-lg border border-red-900/40">
+                  <div className="flex items-center gap-1.5 text-xs text-red-400 bg-red-950/40 p-2.5 rounded-lg border border-red-900/40">
                     <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                     <span>{importError}</span>
                   </div>
@@ -441,7 +549,7 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                 </button>
               </div>
             ) : (
-              <div className="space-y-2.5 text-xs">
+              <div className="flex-1 overflow-y-auto space-y-3 py-3 pr-1 text-xs">
                 <div>
                   <label className="text-neutral-400 text-[10px] uppercase font-bold block mb-1">
                     Protocol
@@ -457,32 +565,48 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                     <option value="trojan">Trojan</option>
                     <option value="wireguard">WireGuard</option>
                     <option value="socks5">SOCKS5</option>
+                    <option value="hysteria2">Hysteria2</option>
                   </select>
-                </div>
-
-                <div>
-                  <label className="text-neutral-400 text-[10px] uppercase font-bold block mb-1">
-                    Server Name
-                  </label>
-                  <input
-                    type="text"
-                    value={manualName}
-                    onChange={(e) => setManualName(e.target.value)}
-                    placeholder="e.g. My Fast Server"
-                    className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40"
-                  />
                 </div>
 
                 <div className="grid grid-cols-3 gap-2">
                   <div className="col-span-2">
                     <label className="text-neutral-400 text-[10px] uppercase font-bold block mb-1">
-                      Server Host
+                      Server Name
+                    </label>
+                    <input
+                      type="text"
+                      value={manualName}
+                      onChange={(e) => setManualName(e.target.value)}
+                      placeholder="e.g. US Edge 01"
+                      className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-neutral-400 text-[10px] uppercase font-bold block mb-1">
+                      Country
+                    </label>
+                    <input
+                      type="text"
+                      value={manualCountryCode}
+                      onChange={(e) => setManualCountryCode(e.target.value)}
+                      placeholder="US, SG, JP..."
+                      maxLength={4}
+                      className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40 uppercase font-mono text-center"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="col-span-2">
+                    <label className="text-neutral-400 text-[10px] uppercase font-bold block mb-1">
+                      Server Address / Host
                     </label>
                     <input
                       type="text"
                       value={manualServer}
                       onChange={(e) => setManualServer(e.target.value)}
-                      placeholder="1.2.3.4 or example.com"
+                      placeholder="1.2.3.4 or vpn.domain.com"
                       className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40 font-mono text-[11px]"
                     />
                   </div>
@@ -499,42 +623,461 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                   </div>
                 </div>
 
-                <div>
-                  <label className="text-neutral-400 text-[10px] uppercase font-bold block mb-1">
-                    UUID / Password
-                  </label>
-                  <input
-                    type="text"
-                    value={manualUuid}
-                    onChange={(e) => setManualUuid(e.target.value)}
-                    placeholder="User ID or Password"
-                    className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40 font-mono text-[11px]"
-                  />
-                </div>
+                {manualProtocol === 'vless' && (
+                  <div className="space-y-2.5 pt-1 border-t border-white/10">
+                    <div>
+                      <label className="text-neutral-400 text-[10px] uppercase font-bold block mb-1">
+                        UUID (User ID)
+                      </label>
+                      <input
+                        type="text"
+                        value={manualUuid}
+                        onChange={(e) => setManualUuid(e.target.value)}
+                        placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                        className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40 font-mono text-[11px]"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-neutral-400 text-[10px] uppercase font-bold block mb-1">
+                          Flow
+                        </label>
+                        <select
+                          value={manualFlow}
+                          onChange={(e) => setManualFlow(e.target.value)}
+                          className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40"
+                        >
+                          <option value="">None</option>
+                          <option value="xtls-rprx-vision">xtls-rprx-vision</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-neutral-400 text-[10px] uppercase font-bold block mb-1">
+                          Packet Encoding
+                        </label>
+                        <select
+                          value={manualPacketEncoding}
+                          onChange={(e) => setManualPacketEncoding(e.target.value)}
+                          className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40"
+                        >
+                          <option value="xudp">xudp</option>
+                          <option value="packetaddr">packetaddr</option>
+                          <option value="">None</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
-                <div>
-                  <label className="text-neutral-400 text-[10px] uppercase font-bold block mb-1">
-                    SNI / Server Name (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    value={manualSni}
-                    onChange={(e) => setManualSni(e.target.value)}
-                    placeholder="e.g. server.domain.com"
-                    className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40 font-mono text-[11px]"
-                  />
-                </div>
+                {manualProtocol === 'vmess' && (
+                  <div className="space-y-2.5 pt-1 border-t border-white/10">
+                    <div>
+                      <label className="text-neutral-400 text-[10px] uppercase font-bold block mb-1">
+                        UUID (User ID)
+                      </label>
+                      <input
+                        type="text"
+                        value={manualUuid}
+                        onChange={(e) => setManualUuid(e.target.value)}
+                        placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                        className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40 font-mono text-[11px]"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-neutral-400 text-[10px] uppercase font-bold block mb-1">
+                          Security / Cipher
+                        </label>
+                        <select
+                          value={manualCipher || 'auto'}
+                          onChange={(e) => setManualCipher(e.target.value)}
+                          className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40"
+                        >
+                          <option value="auto">auto</option>
+                          <option value="aes-128-gcm">aes-128-gcm</option>
+                          <option value="chacha20-poly1305">chacha20-poly1305</option>
+                          <option value="none">none</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-neutral-400 text-[10px] uppercase font-bold block mb-1">
+                          Alter ID
+                        </label>
+                        <input
+                          type="number"
+                          value={manualAlterId}
+                          onChange={(e) => setManualAlterId(Number(e.target.value))}
+                          placeholder="0"
+                          className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40 font-mono"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {manualProtocol === 'shadowsocks' && (
+                  <div className="space-y-2.5 pt-1 border-t border-white/10">
+                    <div>
+                      <label className="text-neutral-400 text-[10px] uppercase font-bold block mb-1">
+                        Password
+                      </label>
+                      <input
+                        type="text"
+                        value={manualPassword}
+                        onChange={(e) => setManualPassword(e.target.value)}
+                        placeholder="Secret password"
+                        className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40 font-mono text-[11px]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-neutral-400 text-[10px] uppercase font-bold block mb-1">
+                        Cipher Method
+                      </label>
+                      <select
+                        value={manualCipher || '2022-blake3-aes-128-gcm'}
+                        onChange={(e) => setManualCipher(e.target.value)}
+                        className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40"
+                      >
+                        <option value="2022-blake3-aes-128-gcm">2022-blake3-aes-128-gcm</option>
+                        <option value="2022-blake3-aes-256-gcm">2022-blake3-aes-256-gcm</option>
+                        <option value="2022-blake3-chacha20-poly1305">2022-blake3-chacha20-poly1305</option>
+                        <option value="aes-128-gcm">aes-128-gcm</option>
+                        <option value="aes-256-gcm">aes-256-gcm</option>
+                        <option value="chacha20-ietf-poly1305">chacha20-ietf-poly1305</option>
+                        <option value="none">none</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
+
+                {(manualProtocol === 'trojan' || manualProtocol === 'hysteria2') && (
+                  <div className="pt-1 border-t border-white/10">
+                    <label className="text-neutral-400 text-[10px] uppercase font-bold block mb-1">
+                      Password
+                    </label>
+                    <input
+                      type="text"
+                      value={manualPassword}
+                      onChange={(e) => setManualPassword(e.target.value)}
+                      placeholder="Password"
+                      className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40 font-mono text-[11px]"
+                    />
+                  </div>
+                )}
+
+                {manualProtocol === 'socks5' && (
+                  <div className="grid grid-cols-2 gap-2 pt-1 border-t border-white/10">
+                    <div>
+                      <label className="text-neutral-400 text-[10px] uppercase font-bold block mb-1">
+                        Username (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={manualUsername}
+                        onChange={(e) => setManualUsername(e.target.value)}
+                        placeholder="User"
+                        className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-neutral-400 text-[10px] uppercase font-bold block mb-1">
+                        Password (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={manualPassword}
+                        onChange={(e) => setManualPassword(e.target.value)}
+                        placeholder="Pass"
+                        className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {manualProtocol === 'wireguard' && (
+                  <div className="space-y-2.5 pt-1 border-t border-white/10">
+                    <div>
+                      <label className="text-neutral-400 text-[10px] uppercase font-bold block mb-1">
+                        Interface Private Key
+                      </label>
+                      <input
+                        type="text"
+                        value={manualWgPrivateKey}
+                        onChange={(e) => setManualWgPrivateKey(e.target.value)}
+                        placeholder="Base64 WireGuard Private Key"
+                        className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40 font-mono text-[11px]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-neutral-400 text-[10px] uppercase font-bold block mb-1">
+                        Peer Public Key
+                      </label>
+                      <input
+                        type="text"
+                        value={manualWgPublicKey}
+                        onChange={(e) => setManualWgPublicKey(e.target.value)}
+                        placeholder="Base64 WireGuard Public Key"
+                        className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40 font-mono text-[11px]"
+                      />
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="col-span-2">
+                        <label className="text-neutral-400 text-[10px] uppercase font-bold block mb-1">
+                          Local Address
+                        </label>
+                        <input
+                          type="text"
+                          value={manualWgAddress}
+                          onChange={(e) => setManualWgAddress(e.target.value)}
+                          placeholder="10.14.0.2/32"
+                          className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40 font-mono text-[11px]"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-neutral-400 text-[10px] uppercase font-bold block mb-1">
+                          MTU
+                        </label>
+                        <input
+                          type="number"
+                          value={manualWgMtu}
+                          onChange={(e) => setManualWgMtu(Number(e.target.value))}
+                          placeholder="1420"
+                          className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40 font-mono"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-neutral-400 text-[10px] uppercase font-bold block mb-1">
+                        DNS Server (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={manualWgDns}
+                        onChange={(e) => setManualWgDns(e.target.value)}
+                        placeholder="1.1.1.1, 8.8.8.8"
+                        className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40 font-mono text-[11px]"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {supportsTls && (
+                  <div className="pt-2 border-t border-white/10">
+                    <button
+                      type="button"
+                      onClick={() => setShowTlsSection(!showTlsSection)}
+                      className="w-full flex items-center justify-between p-2.5 rounded-xl bg-neutral-900/60 hover:bg-neutral-900 border border-white/10 text-xs font-semibold text-neutral-200 transition-all cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Shield className="w-3.5 h-3.5 text-neutral-400" />
+                        <span>TLS & Security Settings</span>
+                      </div>
+                      {showTlsSection ? (
+                        <ChevronDown className="w-3.5 h-3.5 text-neutral-400" />
+                      ) : (
+                        <ChevronRight className="w-3.5 h-3.5 text-neutral-400" />
+                      )}
+                    </button>
+
+                    {showTlsSection && (
+                      <div className="p-3 mt-2 rounded-xl bg-black/60 border border-white/10 space-y-2.5">
+                        <label className="flex items-center gap-2 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={manualTlsEnabled}
+                            onChange={(e) => setManualTlsEnabled(e.target.checked)}
+                            className="rounded border-white/20 bg-neutral-900 text-white focus:ring-0 cursor-pointer"
+                          />
+                          <span className="text-neutral-300 font-medium">Enable TLS</span>
+                        </label>
+
+                        {manualTlsEnabled && (
+                          <>
+                            <div>
+                              <label className="text-neutral-400 text-[10px] uppercase font-bold block mb-1">
+                                SNI / Server Name
+                              </label>
+                              <input
+                                type="text"
+                                value={manualSni}
+                                onChange={(e) => setManualSni(e.target.value)}
+                                placeholder="e.g. server.domain.com"
+                                className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40 font-mono text-[11px]"
+                              />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <label className="text-neutral-400 text-[10px] uppercase font-bold block mb-1">
+                                  Fingerprint (uTLS)
+                                </label>
+                                <select
+                                  value={manualFingerprint}
+                                  onChange={(e) => setManualFingerprint(e.target.value)}
+                                  className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40"
+                                >
+                                  <option value="chrome">chrome</option>
+                                  <option value="firefox">firefox</option>
+                                  <option value="safari">safari</option>
+                                  <option value="ios">ios</option>
+                                  <option value="android">android</option>
+                                  <option value="edge">edge</option>
+                                  <option value="randomized">randomized</option>
+                                  <option value="">None</option>
+                                </select>
+                              </div>
+
+                              <div>
+                                <label className="text-neutral-400 text-[10px] uppercase font-bold block mb-1">
+                                  ALPN
+                                </label>
+                                <input
+                                  type="text"
+                                  value={manualAlpn}
+                                  onChange={(e) => setManualAlpn(e.target.value)}
+                                  placeholder="h2,http/1.1"
+                                  className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40 font-mono text-[11px]"
+                                />
+                              </div>
+                            </div>
+
+                            <label className="flex items-center gap-2 cursor-pointer select-none">
+                              <input
+                                type="checkbox"
+                                checked={manualInsecure}
+                                onChange={(e) => setManualInsecure(e.target.checked)}
+                                className="rounded border-white/20 bg-neutral-900 text-white focus:ring-0 cursor-pointer"
+                              />
+                              <span className="text-neutral-300 font-medium">
+                                Allow Insecure (Skip Cert Verification)
+                              </span>
+                            </label>
+
+                            <div className="pt-2 border-t border-white/10 space-y-2">
+                              <div className="text-[10px] uppercase font-bold text-neutral-400">
+                                VLESS Reality Settings
+                              </div>
+                              <div>
+                                <label className="text-neutral-400 text-[10px] uppercase font-bold block mb-1">
+                                  Reality Public Key
+                                </label>
+                                <input
+                                  type="text"
+                                  value={manualRealityPubKey}
+                                  onChange={(e) => setManualRealityPubKey(e.target.value)}
+                                  placeholder="Reality base64 public key"
+                                  className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40 font-mono text-[11px]"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-neutral-400 text-[10px] uppercase font-bold block mb-1">
+                                  Reality Short ID
+                                </label>
+                                <input
+                                  type="text"
+                                  value={manualRealityShortId}
+                                  onChange={(e) => setManualRealityShortId(e.target.value)}
+                                  placeholder="Hex short ID (e.g. 0123456789abcdef)"
+                                  className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40 font-mono text-[11px]"
+                                />
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {supportsTransport && (
+                  <div className="pt-2 border-t border-white/10">
+                    <button
+                      type="button"
+                      onClick={() => setShowTransportSection(!showTransportSection)}
+                      className="w-full flex items-center justify-between p-2.5 rounded-xl bg-neutral-900/60 hover:bg-neutral-900 border border-white/10 text-xs font-semibold text-neutral-200 transition-all cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Network className="w-3.5 h-3.5 text-neutral-400" />
+                        <span>Transport & Stream Settings</span>
+                      </div>
+                      {showTransportSection ? (
+                        <ChevronDown className="w-3.5 h-3.5 text-neutral-400" />
+                      ) : (
+                        <ChevronRight className="w-3.5 h-3.5 text-neutral-400" />
+                      )}
+                    </button>
+
+                    {showTransportSection && (
+                      <div className="p-3 mt-2 rounded-xl bg-black/60 border border-white/10 space-y-2.5">
+                        <div>
+                          <label className="text-neutral-400 text-[10px] uppercase font-bold block mb-1">
+                            Transport Type
+                          </label>
+                          <select
+                            value={manualTransport}
+                            onChange={(e) =>
+                              setManualTransport(e.target.value as 'tcp' | 'ws' | 'grpc' | 'http' | 'httpupgrade')
+                            }
+                            className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40"
+                          >
+                            <option value="tcp">TCP (Default)</option>
+                            <option value="ws">WebSocket (WS)</option>
+                            <option value="grpc">gRPC</option>
+                            <option value="http">HTTP</option>
+                            <option value="httpupgrade">HTTPUpgrade</option>
+                          </select>
+                        </div>
+
+                        {manualTransport !== 'tcp' && (
+                          <>
+                            <div>
+                              <label className="text-neutral-400 text-[10px] uppercase font-bold block mb-1">
+                                {manualTransport === 'grpc' ? 'gRPC Service Name' : 'Path'}
+                              </label>
+                              <input
+                                type="text"
+                                value={manualTransportPath}
+                                onChange={(e) => setManualTransportPath(e.target.value)}
+                                placeholder={manualTransport === 'grpc' ? 'grpc' : '/'}
+                                className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40 font-mono text-[11px]"
+                              />
+                            </div>
+
+                            {manualTransport !== 'grpc' && (
+                              <div>
+                                <label className="text-neutral-400 text-[10px] uppercase font-bold block mb-1">
+                                  Host Header
+                                </label>
+                                <input
+                                  type="text"
+                                  value={manualTransportHost}
+                                  onChange={(e) => setManualTransportHost(e.target.value)}
+                                  placeholder="e.g. cdn.domain.com"
+                                  className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40 font-mono text-[11px]"
+                                />
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {importError && (
-                  <div className="flex items-center gap-1.5 text-xs text-red-400 bg-red-950/40 p-2 rounded-lg border border-red-900/40">
+                  <div className="flex items-center gap-1.5 text-xs text-red-400 bg-red-950/40 p-2.5 rounded-lg border border-red-900/40">
                     <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                     <span>{importError}</span>
                   </div>
                 )}
+              </div>
+            )}
 
+            {(editingProfile || addMode === 'manual') && (
+              <div className="pt-3 border-t border-white/10 shrink-0">
                 <button
                   onClick={handleManualSave}
-                  className="w-full mt-2 py-2.5 rounded-xl bg-white hover:bg-neutral-200 text-black font-bold transition-all cursor-pointer"
+                  className="w-full py-2.5 rounded-xl bg-white hover:bg-neutral-200 text-black font-bold text-xs shadow-md transition-all cursor-pointer"
                 >
                   {editingProfile ? 'Save Changes' : 'Save Profile'}
                 </button>

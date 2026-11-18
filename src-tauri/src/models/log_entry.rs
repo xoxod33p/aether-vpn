@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 pub struct LogEntry {
     pub id: String,
     pub timestamp: String,
-    pub level: String, // 'info', 'warn', 'error', 'engine'
+    pub level: String,
     pub message: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub target: Option<String>,

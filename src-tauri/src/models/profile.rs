@@ -21,7 +21,6 @@ pub struct Profile {
     pub server: String,
     pub port: u16,
     
-    // Auth fields
     #[serde(skip_serializing_if = "Option::is_none")]
     pub username: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -31,7 +30,6 @@ pub struct Profile {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cipher: Option<String>,
     
-    // TLS settings
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tls_enabled: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -45,7 +43,6 @@ pub struct Profile {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub reality_short_id: Option<String>,
 
-    // Transport
     #[serde(skip_serializing_if = "Option::is_none")]
     pub transport_type: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -53,7 +50,6 @@ pub struct Profile {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub transport_host: Option<String>,
 
-    // V2Ray advanced & XTLS
     #[serde(skip_serializing_if = "Option::is_none")]
     pub flow: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -63,7 +59,6 @@ pub struct Profile {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub alter_id: Option<u32>,
 
-    // WireGuard
     #[serde(skip_serializing_if = "Option::is_none")]
     pub wg_private_key: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -75,7 +70,6 @@ pub struct Profile {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub wg_mtu: Option<u16>,
 
-    // Metadata
     #[serde(skip_serializing_if = "Option::is_none")]
     pub country_code: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]

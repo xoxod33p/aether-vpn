@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DnsConfig {
-    pub provider_type: String, // 'doh', 'dot', 'system', 'custom'
+    pub provider_type: String,
     pub primary_dns: String,
     pub fallback_dns: String,
     pub enable_dns_routing: bool,
