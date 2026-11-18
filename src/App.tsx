@@ -72,7 +72,7 @@ export function App() {
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-black text-neutral-100 font-sans antialiased relative select-none">
       <LoadingSplash />
 
-      <main className="flex-1 overflow-y-auto bg-black relative flex flex-col">
+      <main className="flex-1 overflow-hidden bg-black relative flex flex-col">
         {renderActivePage()}
       </main>
 

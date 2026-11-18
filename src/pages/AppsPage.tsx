@@ -86,7 +86,7 @@ export const AppsPage: React.FC<AppsPageProps> = ({ store }) => {
   };
 
   return (
-    <div className="flex-1 flex flex-col p-4 max-w-4xl mx-auto w-full select-none">
+    <div className="flex flex-col h-full min-h-0 p-4 max-w-4xl mx-auto w-full select-none overflow-hidden">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 shrink-0">
         <div>
           <div className="flex items-center gap-2">
@@ -170,7 +170,7 @@ export const AppsPage: React.FC<AppsPageProps> = ({ store }) => {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto space-y-2.5 pr-0.5 pb-2">
+      <div className="flex-1 min-h-0 overflow-y-auto space-y-2.5 pr-1 pb-2">
         {!isConnected ? (
           <div className="flex flex-col items-center justify-center p-8 text-center rounded-3xl bg-[#0d0d0d] border border-white/10 my-auto">
             <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-neutral-400 mb-3 shadow-inner">
@@ -277,18 +277,28 @@ export const AppsPage: React.FC<AppsPageProps> = ({ store }) => {
                 </div>
 
                 {app.destinationHosts && app.destinationHosts.length > 0 && (
-                  <div className="flex items-center gap-1.5 mt-2.5 flex-wrap pt-2 border-t border-white/5">
-                    <span className="text-[10px] text-neutral-500 uppercase font-semibold">
+                  <div className="flex items-center gap-2 mt-2.5 pt-2 border-t border-white/5 min-w-0">
+                    <span className="text-[10px] text-neutral-500 uppercase font-semibold shrink-0">
                       Routes:
                     </span>
-                    {app.destinationHosts.map((h) => (
-                      <span
-                        key={h}
-                        className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-black border border-white/10 text-neutral-300 max-w-[160px] truncate"
-                      >
-                        {h}
-                      </span>
-                    ))}
+                    <div
+                      className="flex-1 flex items-center gap-1.5 overflow-x-auto py-0.5 min-w-0"
+                      onWheel={(e) => {
+                        if (e.deltaY !== 0) {
+                          e.currentTarget.scrollLeft += e.deltaY;
+                        }
+                      }}
+                    >
+                      {app.destinationHosts.map((h) => (
+                        <span
+                          key={h}
+                          title={h}
+                          className="text-[10px] font-mono px-2 py-0.5 rounded bg-black border border-white/10 text-neutral-300 shrink-0 whitespace-nowrap hover:border-white/30 transition-colors"
+                        >
+                          {h}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
