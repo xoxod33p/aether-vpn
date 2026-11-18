@@ -26,6 +26,7 @@ pub fn run() {
         .setup(|app| {
             // Explicitly set runtime window and taskbar icon from bundled logo asset
             if let Some(window) = app.get_webview_window("main") {
+                let _ = window.center();
                 let icon_bytes = include_bytes!("../icons/icon.png");
                 if let Ok(icon) = tauri::image::Image::from_bytes(icon_bytes) {
                     let _ = window.set_icon(icon);
