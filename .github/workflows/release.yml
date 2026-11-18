@@ -2,12 +2,13 @@ name: Release Automation & Cross-Platform CI
 
 on:
   push:
-    branches:
-      - master
-      - main
     tags:
       - 'v*'
   workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build-tauri:
