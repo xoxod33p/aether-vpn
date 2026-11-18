@@ -87,12 +87,18 @@ impl SingboxConfigBuilder {
 
         let mut route_rules = vec![
             json!({
+                "inbound": ["tun-in", "mixed-in"],
                 "protocol": "dns",
                 "action": "hijack-dns"
             }),
             json!({
+                "inbound": ["tun-in", "mixed-in"],
                 "port": [53],
                 "action": "hijack-dns"
+            }),
+            json!({
+                "ip_cidr": ["1.1.1.1/32", "1.0.0.1/32", "8.8.8.8/32", "8.8.4.4/32"],
+                "outbound": "direct"
             }),
             json!({
                 "ip_is_private": true,
@@ -162,12 +168,17 @@ impl SingboxConfigBuilder {
             json!({
                 "tag": "remote-dns",
                 "address": primary_addr,
-                "address_resolver": "local-dns",
+                "address_resolver": "direct-dns",
                 "detour": "proxy"
             }),
             json!({
-                "tag": "local-dns",
-                "address": "local",
+                "tag": "direct-dns",
+                "address": "1.1.1.1",
+                "detour": "direct"
+            }),
+            json!({
+                "tag": "direct-dns-backup",
+                "address": "8.8.8.8",
                 "detour": "direct"
             }),
         ];
@@ -175,19 +186,19 @@ impl SingboxConfigBuilder {
         let mut dns_rules = vec![
             json!({
                 "outbound": "direct",
-                "server": "local-dns"
+                "server": "direct-dns"
             }),
             json!({
                 "domain": ["localhost"],
                 "domain_suffix": [".local", ".lan", ".localhost"],
-                "server": "local-dns"
+                "server": "direct-dns"
             }),
         ];
 
         if !direct_domains.is_empty() {
             dns_rules.push(json!({
                 "domain": direct_domains,
-                "server": "local-dns"
+                "server": "direct-dns"
             }));
         }
 
@@ -195,7 +206,8 @@ impl SingboxConfigBuilder {
             "servers": dns_servers,
             "rules": dns_rules,
             "final": "remote-dns",
-            "strategy": if settings.enable_ipv6 { "prefer_ipv4" } else { "ipv4_only" }
+            "strategy": if settings.enable_ipv6 { "prefer_ipv4" } else { "ipv4_only" },
+            "independent_cache": true
         });
 
         json!({
