@@ -35,7 +35,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ store }) => {
 
   return (
     <div className="flex flex-col h-full p-4 sm:p-5 max-w-md mx-auto w-full select-none overflow-y-auto">
-      {/* Header */}
+      
       <div className="flex items-center justify-between pb-3 border-b border-white/10 shrink-0 mb-4">
         <div className="flex items-center gap-2">
           <SettingsIcon className="w-4 h-4 text-white" />
@@ -51,14 +51,14 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ store }) => {
       </div>
 
       <div className="space-y-4">
-        {/* Security & Protection Card */}
+        
         <div className="p-4 rounded-2xl bg-[#0d0d0d] border border-white/10 shadow-lg space-y-3.5">
           <div className="flex items-center gap-2 text-xs font-bold text-neutral-300 uppercase tracking-wider">
             <Shield className="w-3.5 h-3.5 text-white" />
             <span>Security & Privacy</span>
           </div>
 
-          {/* Kill Switch Toggle */}
+          
           <div className="flex items-center justify-between gap-3">
             <div>
               <div className="text-xs font-semibold text-white">Kill Switch</div>
@@ -80,7 +80,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ store }) => {
             </button>
           </div>
 
-          {/* DNS Leak Protection */}
+          
           <div className="flex items-center justify-between gap-3 pt-2.5 border-t border-white/10">
             <div>
               <div className="text-xs font-semibold text-white">DNS Leak Protection</div>
@@ -102,7 +102,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ store }) => {
             </button>
           </div>
 
-          {/* IPv6 Control / Leak Prevention */}
+          
           <div className="flex items-center justify-between gap-3 pt-2.5 border-t border-white/10">
             <div>
               <div className="text-xs font-semibold text-white">Disable IPv6 on VPN</div>
@@ -125,7 +125,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ store }) => {
           </div>
         </div>
 
-        {/* Operating Mode Card */}
+        
         <div className="p-4 rounded-2xl bg-[#0d0d0d] border border-white/10 shadow-lg space-y-3">
           <div className="flex items-center gap-2 text-xs font-bold text-neutral-300 uppercase tracking-wider">
             <Radio className="w-3.5 h-3.5 text-white" />
@@ -133,7 +133,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ store }) => {
           </div>
 
           <div className="grid grid-cols-2 gap-2 text-xs">
-            {/* TUN Mode */}
+            
             <div
               onClick={() => updateOperatingMode('tun')}
               className={`p-3 rounded-xl border cursor-pointer transition-all ${
@@ -151,7 +151,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ store }) => {
               </p>
             </div>
 
-            {/* Proxy Mode */}
+            
             <div
               onClick={() => updateOperatingMode('system_proxy')}
               className={`p-3 rounded-xl border cursor-pointer transition-all ${
@@ -171,14 +171,14 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ store }) => {
           </div>
         </div>
 
-        {/* General App Preferences */}
+        
         <div className="p-4 rounded-2xl bg-[#0d0d0d] border border-white/10 shadow-lg space-y-3">
           <div className="flex items-center gap-2 text-xs font-bold text-neutral-300 uppercase tracking-wider">
             <Zap className="w-3.5 h-3.5 text-white" />
             <span>Connection & App</span>
           </div>
 
-          {/* Auto Reconnect */}
+          
           <div className="flex items-center justify-between gap-3">
             <div>
               <div className="text-xs font-semibold text-white">Auto Reconnect</div>
@@ -200,7 +200,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ store }) => {
             </button>
           </div>
 
-          {/* Start on Boot */}
+          
           <div className="flex items-center justify-between gap-3 pt-2.5 border-t border-white/10">
             <div>
               <div className="text-xs font-semibold text-white">Start on Boot</div>
@@ -222,7 +222,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ store }) => {
             </button>
           </div>
 
-          {/* Minimize to Tray */}
+          
           <div className="flex items-center justify-between gap-3 pt-2.5 border-t border-white/10">
             <div>
               <div className="text-xs font-semibold text-white">Minimize to System Tray</div>
@@ -245,7 +245,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ store }) => {
           </div>
         </div>
 
-        {/* Diagnostic Logs Shortcut */}
+        
         <div
           onClick={() => setActiveTab('logs')}
           className="flex items-center justify-between p-3.5 rounded-2xl bg-[#0d0d0d] hover:bg-[#161616] border border-white/10 text-xs font-medium text-neutral-300 hover:text-white cursor-pointer transition-all"
@@ -257,7 +257,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ store }) => {
           <span className="text-neutral-500 text-xs">&rarr;</span>
         </div>
 
-        {/* Footer Brand Info */}
+        
         <div className="pt-2 pb-4 text-center text-neutral-500 text-[11px]">
           <p className="font-semibold text-neutral-400">AetherVPN v0.1.0</p>
           <p className="text-[10px] mt-0.5 text-neutral-500">Secure &bull; Encrypted &bull; Private</p>

@@ -53,7 +53,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
 
   return (
     <div className="flex flex-col h-full justify-between p-4 sm:p-6 max-w-md mx-auto w-full select-none relative overflow-hidden">
-      {/* Faded Background Logo Watermark */}
+      
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none z-0">
         <img
           src="/logo.png"
@@ -64,9 +64,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
           }}
         />
       </div>
-      {/* Top Bar: Mode Toggle & Shield Status */}
+      
       <div className="flex items-center justify-between gap-2 pt-1">
-        {/* Mode Pill (TUN / Proxy) */}
+        
         <div className="flex items-center bg-[#0d0d0d] p-1 rounded-xl border border-white/10 shadow-inner">
           <button
             onClick={() => updateOperatingMode('tun')}
@@ -92,7 +92,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
           </button>
         </div>
 
-        {/* Protection Status Badge */}
+        
         <div
           onClick={() => setActiveTab('settings')}
           className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#0d0d0d] border border-white/10 text-xs font-medium cursor-pointer hover:border-white/30 transition-all"
@@ -108,9 +108,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
         </div>
       </div>
 
-      {/* Hero Centerpiece: Large Tactical Connect Button */}
+      
       <div className="flex flex-col items-center justify-center my-auto py-6">
-        {/* Dynamic Glow Behind Button */}
+        
         <div className="relative flex items-center justify-center">
           <div
             className={`absolute w-52 h-52 rounded-full blur-3xl transition-all duration-700 pointer-events-none ${
@@ -124,7 +124,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
             }`}
           />
 
-          {/* Animated Pulsing Ring when Active */}
+          
           {isConnected && (
             <div className="absolute -inset-4 rounded-full border border-white/30 animate-ping pointer-events-none" />
           )}
@@ -132,7 +132,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
             <div className="absolute -inset-4 rounded-full border border-white/30 animate-pulse pointer-events-none" />
           )}
 
-          {/* The Big Power Button */}
+          
           <button
             onClick={handleToggle}
             disabled={isConnecting || isDisconnecting}
@@ -161,7 +161,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
           </button>
         </div>
 
-        {/* Status Message Text */}
+        
         <div className="mt-6 text-center space-y-1">
           <div className="flex items-center justify-center gap-2">
             <span
@@ -186,7 +186,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
             </span>
           </div>
 
-          {/* Public IP & Geo */}
+          
           <p className="text-xs text-neutral-400 font-mono">
             {connectionInfo.publicIp ? (
               <span>
@@ -198,7 +198,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
             )}
           </p>
 
-          {/* Error Message banner if any */}
+          
           {connectionInfo.errorMessage && (
             <div className="mt-2 inline-flex items-center gap-1.5 text-xs text-red-300 bg-red-950/60 px-3 py-1 rounded-xl border border-red-800/60">
               <AlertCircle className="w-3.5 h-3.5 text-red-400 shrink-0" />
@@ -207,10 +207,10 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
           )}
         </div>
 
-        {/* Live Metrics Grid (Visible when Connected) */}
+        
         {isConnected && (
           <div className="w-full grid grid-cols-4 gap-2 mt-6 p-3 rounded-2xl bg-[#0d0d0d] border border-white/10 shadow-xl">
-            {/* Download */}
+            
             <div className="flex flex-col items-center">
               <div className="flex items-center gap-1 text-[10px] text-neutral-400 uppercase font-semibold">
                 <ArrowDown className="w-3 h-3 text-white" />
@@ -221,7 +221,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
               </div>
             </div>
 
-            {/* Upload */}
+            
             <div className="flex flex-col items-center">
               <div className="flex items-center gap-1 text-[10px] text-neutral-400 uppercase font-semibold">
                 <ArrowUp className="w-3 h-3 text-neutral-300" />
@@ -232,7 +232,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
               </div>
             </div>
 
-            {/* Latency */}
+            
             <div className="flex flex-col items-center">
               <div className="flex items-center gap-1 text-[10px] text-neutral-400 uppercase font-semibold">
                 <Activity className="w-3 h-3 text-neutral-300" />
@@ -243,7 +243,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
               </div>
             </div>
 
-            {/* Uptime */}
+            
             <div className="flex flex-col items-center">
               <div className="flex items-center gap-1 text-[10px] text-neutral-400 uppercase font-semibold">
                 <Clock className="w-3 h-3 text-neutral-300" />
@@ -257,14 +257,14 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
         )}
       </div>
 
-      {/* Selected Server Card: Quick Switcher */}
+      
       <div className="w-full pb-1">
         <div
           onClick={() => setActiveTab('servers')}
           className="group flex items-center justify-between p-3.5 rounded-2xl bg-[#0d0d0d] hover:bg-[#141414] border border-white/10 hover:border-white/30 shadow-lg cursor-pointer transition-all duration-200"
         >
           <div className="flex items-center gap-3 min-w-0">
-            {/* Country Flag / Icon */}
+            
             <div className="w-10 h-10 rounded-xl bg-[#050505] border border-white/10 flex items-center justify-center text-lg shrink-0 shadow-inner">
               {selectedProfile?.countryCode === 'SG'
                 ? '🇸🇬'
@@ -300,7 +300,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
             </div>
           </div>
 
-          {/* Right Chevron & Ping */}
+          
           <div className="flex items-center gap-2 shrink-0">
             {selectedProfile?.latencyMs && selectedProfile.latencyMs > 0 ? (
               <span className="text-[11px] font-mono font-semibold text-neutral-200 bg-white/10 px-2 py-0.5 rounded-md border border-white/15">

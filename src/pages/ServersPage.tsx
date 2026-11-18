@@ -12,6 +12,7 @@ import {
   X,
   AlertCircle,
   Zap,
+  Pencil,
 } from 'lucide-react';
 import { Profile, VpnProtocol } from '../types';
 import { VpnStoreType } from '../stores/useVpnStore';
@@ -38,20 +39,20 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editingProfile, setEditingProfile] = useState<Profile | null>(null);
   const [importText, setImportText] = useState('');
   const [importError, setImportError] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const [isTestingAll, setIsTestingAll] = useState(false);
 
-  // Manual Add Form State
   const [addMode, setAddMode] = useState<'link' | 'manual'>('link');
   const [manualProtocol, setManualProtocol] = useState<VpnProtocol>('vless');
   const [manualName, setManualName] = useState('');
   const [manualServer, setManualServer] = useState('');
   const [manualPort, setManualPort] = useState(443);
   const [manualUuid, setManualUuid] = useState('');
+  const [manualSni, setManualSni] = useState('');
 
-  // Filtered & sorted profiles
   const filteredProfiles = profiles
     .filter((p) => {
       const q = searchQuery.toLowerCase();
@@ -72,7 +73,6 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
     setSelectedProfileId(profile.id);
     setActiveTab('dashboard');
     if (connectionInfo.status === 'Connected') {
-      // Reconnect to newly selected server
       connect();
     }
   };
@@ -83,6 +83,34 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
       await testProfileLatency(p.id);
     }
     setIsTestingAll(false);
+  };
+
+  const handleOpenAdd = () => {
+    setEditingProfile(null);
+    setAddMode('link');
+    setImportText('');
+    setImportError(null);
+    setManualProtocol('vless');
+    setManualName('');
+    setManualServer('');
+    setManualPort(443);
+    setManualUuid('');
+    setManualSni('');
+    setIsAddModalOpen(true);
+  };
+
+  const handleOpenEdit = (profile: Profile) => {
+    setEditingProfile(profile);
+    setAddMode('manual');
+    setImportText('');
+    setImportError(null);
+    setManualProtocol(profile.protocol);
+    setManualName(profile.name);
+    setManualServer(profile.server);
+    setManualPort(profile.port);
+    setManualUuid(profile.uuid || profile.password || '');
+    setManualSni(profile.serverName || '');
+    setIsAddModalOpen(true);
   };
 
   const handleImport = async () => {
@@ -100,6 +128,7 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
       }
       setImportText('');
       setIsAddModalOpen(false);
+      setEditingProfile(null);
     } catch (err: any) {
       setImportError(err?.message || 'Failed to parse link. Check URL format.');
     } finally {
@@ -112,27 +141,48 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
       setImportError('Please enter a server name and address');
       return;
     }
-    const newProfile: Profile = {
-      id: `profile-${Date.now()}`,
-      name: manualName.trim(),
-      protocol: manualProtocol,
-      server: manualServer.trim(),
-      port: Number(manualPort),
-      uuid: manualUuid.trim() || undefined,
-      isFavorite: false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    await saveProfile(newProfile);
+
+    if (editingProfile) {
+      const updatedProfile: Profile = {
+        ...editingProfile,
+        name: manualName.trim(),
+        protocol: manualProtocol,
+        server: manualServer.trim(),
+        port: Number(manualPort),
+        uuid: manualUuid.trim() || undefined,
+        password: manualUuid.trim() || undefined,
+        serverName: manualSni.trim() || undefined,
+        updatedAt: new Date().toISOString(),
+      };
+      await saveProfile(updatedProfile);
+    } else {
+      const newProfile: Profile = {
+        id: `profile-${Date.now()}`,
+        name: manualName.trim(),
+        protocol: manualProtocol,
+        server: manualServer.trim(),
+        port: Number(manualPort),
+        uuid: manualUuid.trim() || undefined,
+        password: manualUuid.trim() || undefined,
+        serverName: manualSni.trim() || undefined,
+        isFavorite: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      await saveProfile(newProfile);
+    }
+
     setIsAddModalOpen(false);
+    setEditingProfile(null);
     setManualName('');
     setManualServer('');
     setManualUuid('');
+    setManualSni('');
   };
 
   return (
     <div className="flex flex-col h-full p-4 sm:p-5 max-w-md mx-auto w-full select-none">
-      {/* Header */}
+      
       <div className="flex items-center justify-between pb-3 border-b border-white/10 shrink-0">
         <div className="flex items-center gap-2">
           <Server className="w-4 h-4 text-white" />
@@ -143,7 +193,7 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
         </div>
 
         <div className="flex items-center gap-1.5">
-          {/* Ping All Button */}
+          
           <button
             onClick={handleTestAll}
             disabled={isTestingAll || profiles.length === 0}
@@ -154,12 +204,9 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
             <span className="hidden sm:inline">Ping</span>
           </button>
 
-          {/* Add Server Button */}
+          
           <button
-            onClick={() => {
-              setImportError(null);
-              setIsAddModalOpen(true);
-            }}
+            onClick={handleOpenAdd}
             className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white hover:bg-neutral-200 text-black text-xs font-bold shadow-md shadow-black transition-all cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
@@ -168,7 +215,7 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
         </div>
       </div>
 
-      {/* Search Bar */}
+      
       <div className="relative my-3 shrink-0">
         <Search className="w-4 h-4 text-neutral-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
         <input
@@ -188,7 +235,7 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
         )}
       </div>
 
-      {/* Server List */}
+      
       <div className="flex-1 overflow-y-auto space-y-2 pr-0.5">
         {filteredProfiles.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center text-neutral-400">
@@ -211,7 +258,7 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                     : 'bg-[#0d0d0d] hover:bg-[#141414] border-white/10 hover:border-white/25'
                 }`}
               >
-                {/* Left info */}
+                
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-8 h-8 rounded-xl bg-[#050505] border border-white/10 flex items-center justify-center text-base shrink-0">
                     {profile.countryCode === 'SG'
@@ -250,9 +297,9 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                   </div>
                 </div>
 
-                {/* Right actions */}
+                
                 <div className="flex items-center gap-2 shrink-0">
-                  {/* Ping Badge */}
+                  
                   {profile.latencyMs ? (
                     <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md border text-neutral-200 bg-white/10 border-white/15">
                       {profile.latencyMs}ms
@@ -270,7 +317,7 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                     </button>
                   )}
 
-                  {/* Favorite toggle */}
+                  
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -285,18 +332,30 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                     <Star className="w-3.5 h-3.5 fill-current" />
                   </button>
 
-                  {/* Delete */}
+                  
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleOpenEdit(profile);
+                    }}
+                    title="Edit Server"
+                    className="p-1 text-neutral-600 hover:text-white transition-colors cursor-pointer"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                  </button>
+
+                  
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       deleteProfile(profile.id);
                     }}
-                    className="p-1 text-neutral-600 hover:text-red-400 transition-colors"
+                    className="p-1 text-neutral-600 hover:text-red-400 transition-colors cursor-pointer"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
 
-                  {/* Active Radio / Check */}
+                  
                   <div
                     className={`w-5 h-5 rounded-full flex items-center justify-center border transition-all ${
                       isSelected
@@ -313,43 +372,50 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
         )}
       </div>
 
-      {/* Add / Import Modal */}
+      
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4">
           <div className="w-full max-w-sm bg-[#0d0d0d] border border-white/15 rounded-3xl p-5 shadow-2xl relative">
-            {/* Close Button */}
+            
             <button
-              onClick={() => setIsAddModalOpen(false)}
-              className="absolute right-4 top-4 text-neutral-400 hover:text-white p-1"
+              onClick={() => {
+                setIsAddModalOpen(false);
+                setEditingProfile(null);
+              }}
+              className="absolute right-4 top-4 text-neutral-400 hover:text-white p-1 cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
 
-            {/* Modal Title */}
-            <h3 className="text-sm font-bold text-white mb-3">Add Server</h3>
+            
+            <h3 className="text-sm font-bold text-white mb-3">
+              {editingProfile ? 'Edit Server' : 'Add Server'}
+            </h3>
 
-            {/* Tabs: Link / Manual */}
-            <div className="flex bg-black p-1 rounded-xl border border-white/10 mb-3 text-xs">
-              <button
-                onClick={() => setAddMode('link')}
-                className={`flex-1 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
-                  addMode === 'link' ? 'bg-white text-black shadow-sm' : 'text-neutral-400 hover:text-white'
-                }`}
-              >
-                Import Link / URL
-              </button>
-              <button
-                onClick={() => setAddMode('manual')}
-                className={`flex-1 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
-                  addMode === 'manual' ? 'bg-white text-black shadow-sm' : 'text-neutral-400 hover:text-white'
-                }`}
-              >
-                Manual Config
-              </button>
-            </div>
+            
+            {!editingProfile && (
+              <div className="flex bg-black p-1 rounded-xl border border-white/10 mb-3 text-xs">
+                <button
+                  onClick={() => setAddMode('link')}
+                  className={`flex-1 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
+                    addMode === 'link' ? 'bg-white text-black shadow-sm' : 'text-neutral-400 hover:text-white'
+                  }`}
+                >
+                  Import Link / URL
+                </button>
+                <button
+                  onClick={() => setAddMode('manual')}
+                  className={`flex-1 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
+                    addMode === 'manual' ? 'bg-white text-black shadow-sm' : 'text-neutral-400 hover:text-white'
+                  }`}
+                >
+                  Manual Config
+                </button>
+              </div>
+            )}
 
-            {/* Link Mode */}
-            {addMode === 'link' ? (
+            
+            {!editingProfile && addMode === 'link' ? (
               <div className="space-y-3">
                 <textarea
                   value={importText}
@@ -375,7 +441,6 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                 </button>
               </div>
             ) : (
-              /* Manual Mode */
               <div className="space-y-2.5 text-xs">
                 <div>
                   <label className="text-neutral-400 text-[10px] uppercase font-bold block mb-1">
@@ -447,11 +512,31 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                   />
                 </div>
 
+                <div>
+                  <label className="text-neutral-400 text-[10px] uppercase font-bold block mb-1">
+                    SNI / Server Name (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={manualSni}
+                    onChange={(e) => setManualSni(e.target.value)}
+                    placeholder="e.g. server.domain.com"
+                    className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40 font-mono text-[11px]"
+                  />
+                </div>
+
+                {importError && (
+                  <div className="flex items-center gap-1.5 text-xs text-red-400 bg-red-950/40 p-2 rounded-lg border border-red-900/40">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{importError}</span>
+                  </div>
+                )}
+
                 <button
                   onClick={handleManualSave}
                   className="w-full mt-2 py-2.5 rounded-xl bg-white hover:bg-neutral-200 text-black font-bold transition-all cursor-pointer"
                 >
-                  Save Profile
+                  {editingProfile ? 'Save Changes' : 'Save Profile'}
                 </button>
               </div>
             )}

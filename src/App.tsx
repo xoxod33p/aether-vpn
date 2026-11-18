@@ -60,15 +60,12 @@ export function App() {
 
   return (
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-black text-neutral-100 font-sans antialiased relative select-none">
-      {/* Quick Launch Splash (Fades in 300ms) */}
       <LoadingSplash />
 
-      {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto bg-black relative flex flex-col">
         {renderActivePage()}
       </main>
 
-      {/* Bottom Navigation Bar */}
       <nav className="h-14 border-t border-white/10 bg-black/95 backdrop-blur-md px-2 flex items-center justify-around shrink-0 z-20 shadow-2xl">
         {navItems.map((item) => {
           const isActive = activeTab === item.id;
@@ -92,7 +89,6 @@ export function App() {
               </div>
               <span className="text-[10px] tracking-wide">{item.label}</span>
 
-              {/* Active Underline Pill */}
               {isActive && (
                 <div className="absolute -bottom-1 w-6 h-0.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
               )}

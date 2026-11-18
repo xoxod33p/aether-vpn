@@ -22,10 +22,8 @@ export const LogsPage: React.FC<LogsPageProps> = ({ store }) => {
   const [copied, setCopied] = useState(false);
   const logContainerRef = useRef<HTMLDivElement>(null);
 
-  // Filter logs and sort with MOST RECENT on top
   const filteredLogs = [...logs]
     .filter((log) => {
-      // Check level filter (treat 'engine' as 'info' if filtering by info)
       const matchesLevel =
         levelFilter === 'all' ||
         log.level === levelFilter ||
@@ -55,7 +53,6 @@ export const LogsPage: React.FC<LogsPageProps> = ({ store }) => {
     }
   };
 
-  // Helper to format log message by stripping duplicated timestamp prefixes and internal tool names
   const formatLogMessage = (msg: string) => {
     const singboxRegex = /^[+\-]\d{4}\s+\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\s+(INFO|WARN|ERROR|FATAL)\s+(\[[^\]]+\]\s+)?(.*)$/i;
     const match = msg.match(singboxRegex);
@@ -65,7 +62,7 @@ export const LogsPage: React.FC<LogsPageProps> = ({ store }) => {
 
   return (
     <div className="flex flex-col h-full p-4 sm:p-5 max-w-md mx-auto w-full select-none">
-      {/* Header */}
+      
       <div className="flex items-center justify-between pb-3 border-b border-white/10 shrink-0 mb-3">
         <div className="flex items-center gap-2">
           <Terminal className="w-4 h-4 text-white" />
@@ -94,9 +91,9 @@ export const LogsPage: React.FC<LogsPageProps> = ({ store }) => {
         </div>
       </div>
 
-      {/* Filter and Search Bar */}
+      
       <div className="flex items-center gap-2 mb-3 shrink-0">
-        {/* Search */}
+        
         <div className="relative flex-1">
           <Search className="w-3.5 h-3.5 text-neutral-500 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
@@ -116,7 +113,7 @@ export const LogsPage: React.FC<LogsPageProps> = ({ store }) => {
           )}
         </div>
 
-        {/* Level Filters */}
+        
         <div className="flex bg-[#0d0d0d] p-0.5 rounded-xl border border-white/10 text-[10px] font-bold">
           {(['all', 'info', 'warn', 'error'] as const).map((lvl) => (
             <button
@@ -134,7 +131,7 @@ export const LogsPage: React.FC<LogsPageProps> = ({ store }) => {
         </div>
       </div>
 
-      {/* Log Console Container (Most Recent at Top) */}
+      
       <div
         ref={logContainerRef}
         className="flex-1 overflow-y-auto bg-black border border-white/10 rounded-2xl p-3 font-mono text-[11px] leading-relaxed space-y-1.5"
@@ -157,12 +154,12 @@ export const LogsPage: React.FC<LogsPageProps> = ({ store }) => {
                 key={log.id}
                 className="flex items-start gap-1.5 break-all py-0.5 border-b border-neutral-900 last:border-b-0 hover:bg-neutral-900/50 rounded px-1 transition-colors"
               >
-                {/* Time */}
+                
                 <span className="text-neutral-500 shrink-0 select-none text-[10px]">
                   {time}
                 </span>
 
-                {/* Level Badge */}
+                
                 <span
                   className={`uppercase font-bold shrink-0 text-[9px] px-1.5 py-0.2 rounded border ${
                     log.level === 'error'
@@ -175,14 +172,14 @@ export const LogsPage: React.FC<LogsPageProps> = ({ store }) => {
                   {displayLevel}
                 </span>
 
-                {/* Target */}
+                
                 {log.target && (
                   <span className="text-neutral-500 shrink-0 text-[10px]">
                     [{log.target.replace(/sing-box|singbox|xray/gi, 'core')}]
                   </span>
                 )}
 
-                {/* Message */}
+                
                 <span
                   className={`flex-1 ${
                     log.level === 'error'
@@ -200,7 +197,7 @@ export const LogsPage: React.FC<LogsPageProps> = ({ store }) => {
         )}
       </div>
 
-      {/* Footer Helper: Jump to Top */}
+      
       <div className="flex justify-between items-center pt-2 shrink-0 text-[10px] text-neutral-500 font-mono">
         <span>Showing {filteredLogs.length} events</span>
         <button
