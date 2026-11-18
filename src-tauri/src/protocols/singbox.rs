@@ -37,7 +37,7 @@ impl SingboxConfigBuilder {
                         "fe80::/10"
                     ],
                     "endpoint_independent_nat": true,
-                    "stack": "system",
+                    "stack": "gvisor",
                     "sniff": true,
                     "mtu": settings.mtu
                 }));
