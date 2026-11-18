@@ -54,7 +54,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
         <img
           src="/logo.png"
           alt=""
-          className="w-72 h-72 sm:w-80 sm:h-80 object-contain opacity-25 -translate-y-12 scale-105"
+          className="w-80 h-80 sm:w-96 sm:h-96 object-contain opacity-40 -translate-y-12 scale-105 drop-shadow-[0_0_40px_rgba(134,59,255,0.35)]"
           onError={(e) => {
             (e.target as HTMLImageElement).style.display = 'none';
           }}

@@ -259,7 +259,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ store }) => {
 
         
         <div className="pt-2 pb-4 text-center text-neutral-500 text-[11px]">
-          <p className="font-semibold text-neutral-400">AetherVPN v0.1.2</p>
+          <p className="font-semibold text-neutral-400">AetherVPN v0.1.3</p>
           <p className="text-[10px] mt-0.5 text-neutral-500">Secure &bull; Encrypted &bull; Private</p>
         </div>
       </div>
