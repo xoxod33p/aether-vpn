@@ -203,6 +203,83 @@ export function useVpnStore() {
     return () => clearInterval(logTimer);
   }, []);
 
+  const reportDeviceHeartbeat = useCallback(
+    async (
+      status: 'connected' | 'disconnected',
+      profile?: Profile | null,
+      publicIp?: string
+    ) => {
+      try {
+        const rawSyncUrl =
+          (import.meta as any).env?.VITE_CLOUD_API_URL ||
+          'https://aether-backend-drab.vercel.app/api/configs';
+        const apiKey =
+          (import.meta as any).env?.VITE_CLOUD_API_KEY ||
+          'aether_sync_super_secret_key_123';
+
+        let devicesUrl = rawSyncUrl;
+        if (devicesUrl.includes('/api/configs')) {
+          devicesUrl = devicesUrl.replace('/api/configs', '/api/devices');
+        } else {
+          devicesUrl = devicesUrl.replace(/\/+$/, '') + '/api/devices';
+        }
+
+        let deviceId = 'AETH-DEV-UNKNOWN';
+        try {
+          deviceId = await vpnApi.getDeviceId();
+        } catch {}
+
+        const isWin = typeof navigator !== 'undefined' && navigator.userAgent.includes('Windows');
+        const os = isWin ? 'Windows' : 'Desktop';
+        const appVersion = '0.1.10';
+        const deviceName = `${os} Client (${deviceId.slice(0, 8)})`;
+
+        await fetch(`${devicesUrl}?key=${apiKey}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-API-Key': apiKey,
+          },
+          body: JSON.stringify({
+            deviceId,
+            deviceName,
+            os,
+            appVersion,
+            ipAddress: publicIp || undefined,
+            connectedServerId: profile?.id || undefined,
+            connectedServerName: profile?.name || undefined,
+            status,
+          }),
+        });
+      } catch (err) {
+        console.debug('[Telemetry] Device heartbeat report failed:', err);
+      }
+    },
+    []
+  );
+
+  useEffect(() => {
+    let heartbeatTimer: ReturnType<typeof setInterval> | null = null;
+    if (connectionInfo.status === 'Connected') {
+      const currentProfile = profiles.find((p) => p.id === connectionInfo.activeProfileId);
+      reportDeviceHeartbeat('connected', currentProfile, connectionInfo.publicIp);
+
+      heartbeatTimer = setInterval(() => {
+        const profile = profiles.find((p) => p.id === connectionInfo.activeProfileId);
+        reportDeviceHeartbeat('connected', profile, connectionInfo.publicIp);
+      }, 30000);
+    }
+    return () => {
+      if (heartbeatTimer) clearInterval(heartbeatTimer);
+    };
+  }, [
+    connectionInfo.status,
+    connectionInfo.activeProfileId,
+    connectionInfo.publicIp,
+    profiles,
+    reportDeviceHeartbeat,
+  ]);
+
   const addLog = useCallback((level: LogEntry['level'], message: string, target?: string) => {
     const newEntry: LogEntry = {
       id: `log-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
@@ -241,6 +318,7 @@ export function useVpnStore() {
       });
 
       addLog('info', 'Secure handshake established. Virtual tunnel active.');
+      reportDeviceHeartbeat('connected', targetProfile, res.publicIp);
 
       setTimeout(async () => {
         try {
@@ -256,6 +334,7 @@ export function useVpnStore() {
               },
             }));
             addLog('info', `Verified VPN egress IP: ${ipInfo.ip} (${ipInfo.city}, ${ipInfo.country})`);
+            reportDeviceHeartbeat('connected', targetProfile, ipInfo.ip);
           }
         } catch {}
       }, 1800);
@@ -267,7 +346,7 @@ export function useVpnStore() {
       }));
       addLog('error', `Connection error: ${err?.message || 'Failed to start engine'}`);
     }
-  }, [profiles, selectedProfileId, settings.defaultMode, addLog]);
+  }, [profiles, selectedProfileId, settings.defaultMode, addLog, reportDeviceHeartbeat]);
 
   const disconnect = useCallback(async () => {
     setConnectionInfo((prev) => ({ ...prev, status: 'Disconnecting' }));
@@ -285,6 +364,7 @@ export function useVpnStore() {
       });
       setAppUsages([]);
       addLog('info', 'Tunnel disconnected cleanly. System networking restored.');
+      reportDeviceHeartbeat('disconnected', null);
 
       setTimeout(async () => {
         try {
@@ -306,7 +386,7 @@ export function useVpnStore() {
       console.error(err);
       setConnectionInfo((prev) => ({ ...prev, status: 'Disconnected' }));
     }
-  }, [addLog]);
+  }, [addLog, reportDeviceHeartbeat]);
 
   const testProfileLatency = useCallback(async (id: string) => {
     const profile = profiles.find((p) => p.id === id);
