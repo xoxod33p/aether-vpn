@@ -14,7 +14,62 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  resolve-version:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.calc.outputs.version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Determine Target Release Version
+        id: calc
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $localVer = (Get-Content src-tauri/tauri.conf.json | ConvertFrom-Json).version
+          Write-Host "Local version: $localVer"
+          
+          $latestTag = ""
+          try {
+            $latest = gh release list --limit 5 --json tagName,isDraft,isPrerelease --jq 'map(select(.isDraft != true and .isPrerelease != true))[0].tagName' 2>$null
+            if ($latest) { $latestTag = $latest.Trim().TrimStart('v') }
+          } catch {}
+
+          Write-Host "Latest published release on GitHub: $latestTag"
+
+          $finalVer = $localVer
+          if ($latestTag) {
+            $lp = $localVer.Split('.') | ForEach-Object { [int]$_ }
+            $gp = $latestTag.Split('.') | ForEach-Object { [int]$_ }
+            while ($lp.Count -lt 3) { $lp += 0 }
+            while ($gp.Count -lt 3) { $gp += 0 }
+
+            $isGreater = $false
+            for ($i = 0; $i -lt 3; $i++) {
+              if ($lp[$i] -gt $gp[$i]) {
+                $isGreater = $true
+                break
+              } elseif ($lp[$i] -lt $gp[$i]) {
+                break
+              }
+            }
+
+            if (-not $isGreater) {
+              $nextPatch = $gp[2] + 1
+              $finalVer = "$($gp[0]).$($gp[1]).$nextPatch"
+              Write-Host "Local version ($localVer) <= latest release ($latestTag). Auto-bumping to: $finalVer"
+            }
+          }
+
+          Write-Host "Target build version: $finalVer"
+          "version=$finalVer" >> $env:GITHUB_OUTPUT
+
   build-tauri:
+    needs: resolve-version
     permissions:
       contents: write
     strategy:
@@ -30,6 +85,27 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Apply Resolved Release Version
+        shell: pwsh
+        run: |
+          $ver = "${{ needs.resolve-version.outputs.version }}"
+          Write-Host "Configuring build for version: $ver"
+          
+          $tPath = "src-tauri/tauri.conf.json"
+          $tJson = Get-Content $tPath -Raw | ConvertFrom-Json
+          $tJson.version = $ver
+          $tJson | ConvertTo-Json -Depth 10 | Set-Content $tPath
+
+          $pPath = "package.json"
+          $pJson = Get-Content $pPath -Raw | ConvertFrom-Json
+          $pJson.version = $ver
+          $pJson | ConvertTo-Json -Depth 10 | Set-Content $pPath
+
+          $cPath = "src-tauri/Cargo.toml"
+          $cRaw = Get-Content $cPath -Raw
+          $cRaw = $cRaw -replace 'version\s*=\s*"[^"]+"', "version = `"$ver`""
+          Set-Content -Path $cPath -Value $cRaw
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
