@@ -50,6 +50,60 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
   const [importError, setImportError] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const [isTestingAll, setIsTestingAll] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<string | null>(null);
+
+  const handleSyncFreeServers = async () => {
+    setIsSyncing(true);
+    setSyncStatus(null);
+    try {
+      const apiUrl = 'https://aether-backend-drab.vercel.app/api/configs?key=aether_sync_super_secret_key_123';
+      const res = await fetch(apiUrl, {
+        headers: { 'X-API-Key': 'aether_sync_super_secret_key_123' },
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      const list = Array.isArray(data) ? data : (data.servers || data.configs || []);
+      let count = 0;
+      for (const s of list) {
+        if (!s.server || !s.port) continue;
+        const profile: Profile = {
+          id: s.id || `sync-${s.protocol || 'vless'}-${s.server}-${s.port}`,
+          name: s.name || `Free ${s.countryCode || 'Server'} - ${s.server}`,
+          protocol: s.protocol || 'vless',
+          server: s.server,
+          port: Number(s.port),
+          uuid: s.uuid,
+          password: s.password,
+          username: s.username,
+          cipher: s.cipher,
+          tlsEnabled: s.tlsEnabled ?? true,
+          serverName: s.serverName || s.server,
+          allowInsecure: s.allowInsecure ?? false,
+          realityPublicKey: s.realityPublicKey,
+          realityShortId: s.realityShortId,
+          transportType: s.transportType || 'tcp',
+          transportPath: s.transportPath,
+          transportHost: s.transportHost,
+          flow: s.flow,
+          countryCode: s.countryCode || 'US',
+          groupName: 'Free Sync',
+          isFavorite: false,
+          createdAt: s.createdAt || new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        await saveProfile(profile);
+        count++;
+      }
+      setSyncStatus(count > 0 ? `Synced ${count}` : 'Synced');
+      setTimeout(() => setSyncStatus(null), 3000);
+    } catch {
+      setSyncStatus('Failed');
+      setTimeout(() => setSyncStatus(null), 3000);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   const [addMode, setAddMode] = useState<'link' | 'manual'>('link');
 
@@ -327,12 +381,13 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
 
         <div className="flex items-center gap-1.5">
           <button
-            onClick={() => setActiveTab('settings')}
-            title="Sync Free Servers from Cloud Backend"
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-[#0d0d0d] hover:bg-[#161616] text-neutral-300 text-xs font-medium border border-white/10 transition-all cursor-pointer"
+            onClick={handleSyncFreeServers}
+            disabled={isSyncing}
+            title="Sync Free Servers from Cloud"
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-[#0d0d0d] hover:bg-[#161616] text-neutral-300 text-xs font-medium border border-white/10 transition-all cursor-pointer disabled:opacity-50"
           >
-            <Cloud className="w-3.5 h-3.5 text-neutral-300" />
-            <span className="hidden sm:inline">Sync</span>
+            <Cloud className={`w-3.5 h-3.5 text-neutral-300 ${isSyncing ? 'animate-pulse' : ''}`} />
+            <span className="hidden sm:inline">{isSyncing ? 'Syncing...' : syncStatus || 'Sync'}</span>
           </button>
 
           <button

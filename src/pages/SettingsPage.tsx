@@ -13,13 +13,11 @@ import {
   Download,
   RefreshCw,
   ExternalLink,
-  Key,
-  Cloud,
   Database,
   Laptop,
   Copy,
 } from 'lucide-react';
-import { AppSettings, OperatingMode, UpdateInfo, Profile } from '../types';
+import { AppSettings, OperatingMode, UpdateInfo } from '../types';
 import { VpnStoreType } from '../stores/useVpnStore';
 import { vpnApi } from '../services/tauriApi';
 
@@ -29,20 +27,13 @@ interface SettingsPageProps {
 }
 
 export const SettingsPage: React.FC<SettingsPageProps> = ({ store, initialUpdateInfo }) => {
-  const { settings, setSettings, toggleKillSwitch, updateOperatingMode, setActiveTab, saveProfile } = store;
+  const { settings, setSettings, toggleKillSwitch, updateOperatingMode, setActiveTab } = store;
   const [savedSuccess, setSavedSuccess] = useState(false);
 
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(initialUpdateInfo || null);
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
   const [isInstallingUpdate, setIsInstallingUpdate] = useState(false);
   const [updateStatus, setUpdateStatus] = useState<string | null>(null);
-
-  const [syncApiUrl, setSyncApiUrl] = useState(() => localStorage.getItem('aether_sync_api_url') || 'https://aether-backend-drab.vercel.app/api/configs');
-  const [syncApiKey, setSyncApiKey] = useState(() => localStorage.getItem('aether_sync_api_key') || 'aether_sync_super_secret_key_123');
-  const [showKey, setShowKey] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [syncSuccess, setSyncSuccess] = useState<string | null>(null);
-  const [syncError, setSyncError] = useState<string | null>(null);
 
   const [deviceId, setDeviceId] = useState<string>('');
   const [copiedDeviceId, setCopiedDeviceId] = useState(false);
@@ -97,73 +88,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ store, initialUpdate
     } catch (e: any) {
       setUpdateStatus(e.message || 'Failed to install update.');
       setIsInstallingUpdate(false);
-    }
-  };
-
-  const handleSyncServers = async () => {
-    if (!syncApiUrl.trim()) {
-      setSyncError('Please enter a valid Backend API URL');
-      setTimeout(() => setSyncError(null), 3000);
-      return;
-    }
-    setIsSyncing(true);
-    setSyncError(null);
-    setSyncSuccess(null);
-    try {
-      const targetUrl = new URL(syncApiUrl.trim());
-      if (syncApiKey.trim() && !targetUrl.searchParams.has('key')) {
-        targetUrl.searchParams.set('key', syncApiKey.trim());
-      }
-      const res = await fetch(targetUrl.toString(), {
-        headers: syncApiKey.trim() ? { 'X-API-Key': syncApiKey.trim() } : {},
-      });
-      if (!res.ok) {
-        throw new Error(`API returned HTTP ${res.status}`);
-      }
-      const data = await res.json();
-      const list = Array.isArray(data) ? data : (data.servers || data.configs || []);
-      if (!Array.isArray(list) || list.length === 0) {
-        throw new Error('No server configurations found in response');
-      }
-
-      let count = 0;
-      for (const s of list) {
-        if (!s.server || !s.port) continue;
-        const profile: Profile = {
-          id: s.id || `sync-${s.protocol || 'vless'}-${s.server}-${s.port}`,
-          name: s.name || `Free ${s.countryCode || 'Server'} - ${s.server}`,
-          protocol: s.protocol || 'vless',
-          server: s.server,
-          port: Number(s.port),
-          uuid: s.uuid,
-          password: s.password,
-          username: s.username,
-          cipher: s.cipher,
-          tlsEnabled: s.tlsEnabled ?? true,
-          serverName: s.serverName || s.server,
-          allowInsecure: s.allowInsecure ?? false,
-          realityPublicKey: s.realityPublicKey,
-          realityShortId: s.realityShortId,
-          transportType: s.transportType || 'tcp',
-          transportPath: s.transportPath,
-          transportHost: s.transportHost,
-          flow: s.flow,
-          countryCode: s.countryCode || 'US',
-          groupName: 'Free Sync',
-          isFavorite: false,
-          createdAt: s.createdAt || new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-        await saveProfile(profile);
-        count++;
-      }
-      setSyncSuccess(`Synced ${count} free servers`);
-      setTimeout(() => setSyncSuccess(null), 3500);
-    } catch (err: any) {
-      setSyncError(err.message || 'Sync failed');
-      setTimeout(() => setSyncError(null), 4000);
-    } finally {
-      setIsSyncing(false);
     }
   };
 
@@ -364,75 +288,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ store, initialUpdate
             <Database className="w-3 h-3 text-neutral-400 shrink-0" />
             <span>Database persistence guaranteed. Your servers and credentials will never be reset on update.</span>
           </div>
-        </div>
-
-        <div className="p-4 rounded-2xl bg-[#0d0d0d] border border-white/10 shadow-lg space-y-3.5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-xs font-bold text-neutral-300 uppercase tracking-wider">
-              <Cloud className="w-3.5 h-3.5 text-white" />
-              <span>Cloud Server Sync</span>
-            </div>
-            {syncSuccess && (
-              <span className="text-[10px] font-semibold text-neutral-200 bg-white/10 px-2 py-0.5 rounded-md border border-white/20">
-                {syncSuccess}
-              </span>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <div>
-              <label className="text-[11px] font-semibold text-neutral-400 block mb-1">Backend API URL</label>
-              <input
-                type="text"
-                value={syncApiUrl}
-                onChange={(e) => {
-                  setSyncApiUrl(e.target.value);
-                  localStorage.setItem('aether_sync_api_url', e.target.value);
-                }}
-                placeholder="https://aether-backend-drab.vercel.app/api/configs"
-                className="w-full bg-[#161616] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-white/30 font-mono"
-              />
-            </div>
-
-            <div>
-              <label className="text-[11px] font-semibold text-neutral-400 block mb-1">Sync Authentication Key</label>
-              <div className="relative">
-                <input
-                  type={showKey ? 'text' : 'password'}
-                  value={syncApiKey}
-                  onChange={(e) => {
-                    setSyncApiKey(e.target.value);
-                    localStorage.setItem('aether_sync_api_key', e.target.value);
-                  }}
-                  placeholder="Enter secret sync key"
-                  className="w-full bg-[#161616] border border-white/10 rounded-xl px-3 py-1.5 pr-8 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-white/30 font-mono"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowKey(!showKey)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white cursor-pointer"
-                >
-                  <Key className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="pt-2 border-t border-white/10 flex items-center justify-between">
-            <span className="text-[10px] text-neutral-500">Imports free configs without modifying custom servers</span>
-            <button
-              onClick={handleSyncServers}
-              disabled={isSyncing || !syncApiUrl}
-              className="px-3 py-1.5 rounded-xl bg-white hover:bg-neutral-200 text-black text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-40"
-            >
-              <RefreshCw className={`w-3 h-3 ${isSyncing ? 'animate-spin' : ''}`} />
-              <span>{isSyncing ? 'Syncing...' : 'Sync Now'}</span>
-            </button>
-          </div>
-
-          {syncError && (
-            <p className="text-[11px] text-red-400 font-mono">{syncError}</p>
-          )}
         </div>
 
         <div className="p-4 rounded-2xl bg-[#0d0d0d] border border-white/10 shadow-lg space-y-3.5">
