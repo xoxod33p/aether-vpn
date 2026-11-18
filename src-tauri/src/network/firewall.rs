@@ -1,3 +1,4 @@
+#[allow(unused_imports)]
 use tracing::{info, warn};
 
 pub struct KillSwitchManager;

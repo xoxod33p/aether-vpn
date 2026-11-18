@@ -75,11 +75,11 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
-      - name: Run Backend Rust Test Suite
-        run: cargo test --lib --manifest-path src-tauri/Cargo.toml
-
       - name: Build Frontend Application
         run: npm run build
+
+      - name: Run Backend Rust Test Suite
+        run: cargo test --lib --manifest-path src-tauri/Cargo.toml
 
       - name: Build Tauri Application Bundle
         uses: tauri-apps/tauri-action@v0
