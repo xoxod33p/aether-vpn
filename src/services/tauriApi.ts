@@ -187,4 +187,8 @@ export const vpnApi = {
   clearLogs: async (): Promise<void> => {
     return safeInvoke<void>('clear_logs', {});
   },
+
+  minimizeWindow: async (): Promise<void> => {
+    return safeInvoke<void>('minimize_window', {});
+  },
 };

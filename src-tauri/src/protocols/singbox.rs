@@ -350,9 +350,7 @@ impl SingboxConfigBuilder {
                         "ws" => {
                             let mut ws = json!({
                                 "type": "ws",
-                                "path": p.transport_path.as_deref().filter(|s| !s.is_empty()).unwrap_or("/"),
-                                "max_early_data": 2048,
-                                "early_data_header_name": "Sec-WebSocket-Protocol"
+                                "path": p.transport_path.as_deref().filter(|s| !s.is_empty()).unwrap_or("/")
                             });
                             let host = p.transport_host.as_deref().or(p.server_name.as_deref()).unwrap_or(&p.server);
                             if !host.is_empty() {
@@ -434,9 +432,7 @@ impl SingboxConfigBuilder {
                         "ws" => {
                             let mut ws = json!({
                                 "type": "ws",
-                                "path": p.transport_path.as_deref().filter(|s| !s.is_empty()).unwrap_or("/"),
-                                "max_early_data": 2048,
-                                "early_data_header_name": "Sec-WebSocket-Protocol"
+                                "path": p.transport_path.as_deref().filter(|s| !s.is_empty()).unwrap_or("/")
                             });
                             let host = p.transport_host.as_deref().or(p.server_name.as_deref()).unwrap_or(&p.server);
                             if !host.is_empty() {
@@ -532,9 +528,7 @@ impl SingboxConfigBuilder {
                         "ws" => {
                             let mut ws = json!({
                                 "type": "ws",
-                                "path": p.transport_path.as_deref().filter(|s| !s.is_empty()).unwrap_or("/"),
-                                "max_early_data": 2048,
-                                "early_data_header_name": "Sec-WebSocket-Protocol"
+                                "path": p.transport_path.as_deref().filter(|s| !s.is_empty()).unwrap_or("/")
                             });
                             let host = p.transport_host.as_deref().or(p.server_name.as_deref()).unwrap_or(&p.server);
                             if !host.is_empty() {

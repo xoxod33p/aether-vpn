@@ -16,9 +16,11 @@ import {
   ChevronRight,
   Shield,
   Network,
+  Minus,
 } from 'lucide-react';
 import { Profile, VpnProtocol } from '../types';
 import { VpnStoreType } from '../stores/useVpnStore';
+import { vpnApi } from '../services/tauriApi';
 import { getProtocolBadgeColor } from '../utils/formatters';
 
 interface ServersPageProps {
@@ -341,6 +343,14 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Add</span>
+          </button>
+
+          <button
+            onClick={() => vpnApi.minimizeWindow()}
+            title="Minimize to toolbar"
+            className="p-1.5 rounded-xl bg-[#0d0d0d] hover:bg-[#161616] text-neutral-400 hover:text-white border border-white/10 transition-all cursor-pointer"
+          >
+            <Minus className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>

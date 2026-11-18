@@ -31,7 +31,57 @@ pub fn run() {
                     let _ = window.set_icon(icon);
                 }
             }
+
+            let icon_bytes = include_bytes!("../icons/icon.png");
+            if let Ok(tray_icon_img) = tauri::image::Image::from_bytes(icon_bytes) {
+                let show_i = tauri::menu::MenuItem::with_id(app, "show", "Show AetherVPN", true, None::<&str>)?;
+                let quit_i = tauri::menu::MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
+                let menu = tauri::menu::Menu::with_items(app, &[&show_i, &quit_i])?;
+
+                let _tray = tauri::tray::TrayIconBuilder::new()
+                    .icon(tray_icon_img)
+                    .tooltip("AetherVPN")
+                    .menu(&menu)
+                    .show_menu_on_left_click(false)
+                    .on_menu_event(|app, event| {
+                        match event.id.as_ref() {
+                            "quit" => {
+                                app.exit(0);
+                            }
+                            "show" => {
+                                if let Some(window) = app.get_webview_window("main") {
+                                    let _ = window.show();
+                                    let _ = window.unminimize();
+                                    let _ = window.set_focus();
+                                }
+                            }
+                            _ => {}
+                        }
+                    })
+                    .on_tray_icon_event(|tray, event| {
+                        if let tauri::tray::TrayIconEvent::Click { button: tauri::tray::MouseButton::Left, button_state: tauri::tray::MouseButtonState::Up, .. } = event {
+                            let app = tray.app_handle();
+                            if let Some(window) = app.get_webview_window("main") {
+                                let _ = window.show();
+                                let _ = window.unminimize();
+                                let _ = window.set_focus();
+                            }
+                        }
+                    })
+                    .build(app)?;
+            }
+
             Ok(())
+        })
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                let db_state = window.state::<Database>();
+                let should_minimize = db_state.get_settings().map(|s| s.minimize_to_tray).unwrap_or(false);
+                if should_minimize {
+                    api.prevent_close();
+                    let _ = window.hide();
+                }
+            }
         })
         .manage(db)
         .manage(conn_mgr)
@@ -50,6 +100,7 @@ pub fn run() {
             save_settings,
             get_dns_config,
             save_dns_config,
+            minimize_window,
             get_subscriptions,
             save_subscription,
             update_subscription,

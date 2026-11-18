@@ -23,3 +23,18 @@ pub async fn save_dns_config(config: DnsConfig, db: State<'_, Database>) -> Resu
     db.save_dns_config(&config).map_err(|e| e.to_string())?;
     Ok(config)
 }
+
+#[tauri::command]
+pub async fn minimize_window(app: tauri::AppHandle) -> Result<(), String> {
+    use tauri::Manager;
+    if let Some(window) = app.get_webview_window("main") {
+        let db = app.state::<Database>();
+        let minimize_to_tray = db.get_settings().map(|s| s.minimize_to_tray).unwrap_or(false);
+        if minimize_to_tray {
+            window.hide().map_err(|e| e.to_string())?;
+        } else {
+            window.minimize().map_err(|e| e.to_string())?;
+        }
+    }
+    Ok(())
+}

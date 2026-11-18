@@ -10,8 +10,10 @@ import {
   ChevronRight,
   AlertCircle,
   MapPin,
+  Minus,
 } from 'lucide-react';
 import { VpnStoreType } from '../stores/useVpnStore';
+import { vpnApi } from '../services/tauriApi';
 import { formatSpeed, formatDuration, formatBytes, getProtocolBadgeColor } from '../utils/formatters';
 
 interface DashboardPageProps {
@@ -62,7 +64,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
         />
       </div>
 
-      <div className="flex items-center justify-center pt-1 z-10">
+      <div className="flex items-center justify-between pt-1 z-10">
+        <div className="w-8" />
         <div className="flex items-center bg-[#0d0d0d] p-1 rounded-xl border border-white/10 shadow-inner">
           <button
             onClick={() => updateOperatingMode('tun')}
@@ -87,6 +90,13 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
             <span>Proxy</span>
           </button>
         </div>
+        <button
+          onClick={() => vpnApi.minimizeWindow()}
+          title="Minimize to toolbar"
+          className="w-8 h-8 rounded-xl bg-[#0d0d0d] hover:bg-[#161616] border border-white/10 flex items-center justify-center text-neutral-400 hover:text-white transition-all cursor-pointer"
+        >
+          <Minus className="w-4 h-4" />
+        </button>
       </div>
 
       <div className="flex flex-col items-center justify-center my-auto py-5 z-10">
@@ -275,12 +285,6 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
         >
           <div className="flex items-center gap-3 min-w-0">
             <div className="relative">
-              {isConnecting && (
-                <div className="absolute -inset-1 rounded-xl border border-white/40 animate-radar-spin pointer-events-none" />
-              )}
-              {isConnected && (
-                <div className="absolute -inset-1 rounded-xl border border-white/20 animate-location-beacon pointer-events-none" />
-              )}
               <div className="w-10 h-10 rounded-xl bg-[#050505] border border-white/10 flex items-center justify-center text-lg shrink-0 shadow-inner relative z-10">
                 {selectedProfile?.countryCode === 'SG'
                   ? '🇸🇬'
@@ -296,7 +300,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
               </div>
 
               {isConnected && (
-                <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-white border border-black shadow-[0_0_6px_rgba(255,255,255,0.8)] z-20" />
+                <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-white border border-black z-20" />
               )}
             </div>
 
@@ -322,14 +326,6 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            {isConnected && (
-              <div className="flex items-end gap-0.5 h-3 px-1.5">
-                <div className="w-1 bg-white rounded-full animate-signal-1" />
-                <div className="w-1 bg-white rounded-full animate-signal-2" />
-                <div className="w-1 bg-white rounded-full animate-signal-3" />
-              </div>
-            )}
-
             {selectedProfile?.latencyMs && selectedProfile.latencyMs > 0 ? (
               <span className="text-[11px] font-mono font-semibold text-neutral-200 bg-white/10 px-2 py-0.5 rounded-md border border-white/15">
                 {selectedProfile.latencyMs} ms

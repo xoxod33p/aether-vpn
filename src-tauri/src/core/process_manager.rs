@@ -168,12 +168,17 @@ impl ProcessManager {
                 let mut reader = BufReader::new(stderr).lines();
                 while let Ok(Some(line)) = reader.next_line().await {
                     let sanitized = sanitize_log_line(&line);
-                    let level = if sanitized.contains("FATAL") || sanitized.contains("ERROR") || sanitized.contains("Access is denied") {
+                    let is_routine_close = sanitized.contains("ws closed: 1000")
+                        || sanitized.contains("ws closed: 1001")
+                        || sanitized.contains("connection download closed: ws closed")
+                        || sanitized.contains("context canceled")
+                        || sanitized.contains("broken pipe");
+                    let level = if (sanitized.contains("FATAL") || sanitized.contains("ERROR") || sanitized.contains("Access is denied")) && !is_routine_close {
                         *last_err_sink.lock() = Some(sanitized.clone());
                         "error"
                     } else if sanitized.contains("WARN") {
                         "warn"
-                    } else if sanitized.contains("INFO") {
+                    } else if sanitized.contains("INFO") || is_routine_close {
                         "info"
                     } else {
                         "engine"
