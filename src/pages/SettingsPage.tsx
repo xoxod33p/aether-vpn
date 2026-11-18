@@ -37,8 +37,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ store, initialUpdate
   const [isInstallingUpdate, setIsInstallingUpdate] = useState(false);
   const [updateStatus, setUpdateStatus] = useState<string | null>(null);
 
-  const [syncApiUrl, setSyncApiUrl] = useState(() => localStorage.getItem('aether_sync_api_url') || '');
-  const [syncApiKey, setSyncApiKey] = useState(() => localStorage.getItem('aether_sync_api_key') || '');
+  const [syncApiUrl, setSyncApiUrl] = useState(() => localStorage.getItem('aether_sync_api_url') || 'https://aether-backend-drab.vercel.app/api/configs');
+  const [syncApiKey, setSyncApiKey] = useState(() => localStorage.getItem('aether_sync_api_key') || 'aether_sync_super_secret_key_123');
   const [showKey, setShowKey] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncSuccess, setSyncSuccess] = useState<string | null>(null);
@@ -389,7 +389,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ store, initialUpdate
                   setSyncApiUrl(e.target.value);
                   localStorage.setItem('aether_sync_api_url', e.target.value);
                 }}
-                placeholder="https://your-api.vercel.app/api/configs"
+                placeholder="https://aether-backend-drab.vercel.app/api/configs"
                 className="w-full bg-[#161616] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-white/30 font-mono"
               />
             </div>
