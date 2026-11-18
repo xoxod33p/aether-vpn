@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { Profile, VpnProtocol } from '../types';
 import { VpnStoreType } from '../stores/useVpnStore';
-import { getProtocolBadgeColor } from '../utils/formatters';
+import { getProtocolBadgeColor, isCloudProfile } from '../utils/formatters';
 
 interface ServersPageProps {
   store: VpnStoreType;
@@ -183,7 +183,7 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
   };
 
   const handleOpenEdit = (profile: Profile) => {
-    if (isVpnConnected) {
+    if (isVpnConnected || isCloudProfile(profile)) {
       return;
     }
     setEditingProfile(profile);
@@ -298,6 +298,10 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
     };
 
     if (editingProfile) {
+      if (isCloudProfile(editingProfile)) {
+        setImportError('Cloud-synced free servers cannot be modified.');
+        return;
+      }
       if (isVpnConnected) {
         setImportError('Cannot edit server configuration while VPN is connected. Please disconnect first.');
         return;
@@ -446,9 +450,15 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                       >
                         {profile.protocol}
                       </span>
+                      {isCloudProfile(profile) && (
+                        <span className="text-[9px] px-1.5 py-0.2 rounded font-mono uppercase font-bold border border-cyan-500/30 bg-cyan-500/10 text-cyan-300 flex items-center gap-0.5">
+                          <Cloud className="w-2.5 h-2.5" />
+                          Cloud
+                        </span>
+                      )}
                     </div>
                     <div className="text-[11px] text-neutral-400 font-mono truncate mt-0.5">
-                      {profile.server}:{profile.port}
+                      {isCloudProfile(profile) ? 'Cloud Node • Protected' : `${profile.server}:${profile.port}`}
                     </div>
                   </div>
                 </div>
@@ -485,22 +495,24 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                     <Star className="w-3.5 h-3.5 fill-current" />
                   </button>
 
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (isVpnConnected) return;
-                      handleOpenEdit(profile);
-                    }}
-                    disabled={isVpnConnected}
-                    title={isVpnConnected ? 'Cannot edit server while VPN is connected' : 'Edit Server'}
-                    className={`p-1 transition-colors ${
-                      isVpnConnected
-                        ? 'text-neutral-700 cursor-not-allowed opacity-40'
-                        : 'text-neutral-600 hover:text-white cursor-pointer'
-                    }`}
-                  >
-                    <Pencil className="w-3.5 h-3.5" />
-                  </button>
+                  {!isCloudProfile(profile) && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (isVpnConnected) return;
+                        handleOpenEdit(profile);
+                      }}
+                      disabled={isVpnConnected}
+                      title={isVpnConnected ? 'Cannot edit server while VPN is connected' : 'Edit Server'}
+                      className={`p-1 transition-colors ${
+                        isVpnConnected
+                          ? 'text-neutral-700 cursor-not-allowed opacity-40'
+                          : 'text-neutral-600 hover:text-white cursor-pointer'
+                      }`}
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                  )}
 
                   <button
                     onClick={(e) => {

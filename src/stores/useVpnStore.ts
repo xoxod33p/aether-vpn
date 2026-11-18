@@ -402,9 +402,12 @@ export function useVpnStore() {
         const synced = await vpnApi.syncCloudServers();
         syncedCount = synced.length;
       } else {
-        const apiUrl = 'https://aether-backend-drab.vercel.app/api/configs?key=aether_sync_super_secret_key_123';
-        const res = await fetch(apiUrl, {
-          headers: { 'X-API-Key': 'aether_sync_super_secret_key_123' },
+        const defaultApiUrl = 'https://aether-backend-drab.vercel.app/api/configs';
+        const defaultApiKey = 'aether_sync_super_secret_key_123';
+        const apiUrl = import.meta.env.VITE_CLOUD_API_URL || defaultApiUrl;
+        const apiKey = import.meta.env.VITE_CLOUD_API_KEY || defaultApiKey;
+        const res = await fetch(`${apiUrl}?key=${apiKey}`, {
+          headers: { 'X-API-Key': apiKey },
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();

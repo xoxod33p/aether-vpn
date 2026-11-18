@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { VpnStoreType } from '../stores/useVpnStore';
 import { vpnApi } from '../services/tauriApi';
-import { formatSpeed, formatDuration, formatBytes, getProtocolBadgeColor } from '../utils/formatters';
+import { formatSpeed, formatDuration, formatBytes, getProtocolBadgeColor, isCloudProfile } from '../utils/formatters';
 
 interface DashboardPageProps {
   store: VpnStoreType;
@@ -246,7 +246,11 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ store }) => {
                 )}
               </div>
               <div className="text-[11px] text-neutral-400 font-mono truncate mt-0.5">
-                {selectedProfile ? `${selectedProfile.server}:${selectedProfile.port}` : 'Click to pick a server'}
+                {selectedProfile
+                  ? isCloudProfile(selectedProfile)
+                    ? 'Cloud Node • Protected'
+                    : `${selectedProfile.server}:${selectedProfile.port}`
+                  : 'Click to pick a server'}
               </div>
             </div>
           </div>

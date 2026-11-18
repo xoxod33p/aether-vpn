@@ -201,6 +201,9 @@ impl ProcessManager {
                     let is_routine_close = sanitized.contains("ws closed: 1000")
                         || sanitized.contains("ws closed: 1001")
                         || sanitized.contains("connection download closed: ws closed")
+                        || sanitized.contains("not a control frame")
+                        || sanitized.contains("unknown version:")
+                        || sanitized.contains("invalid utf8 sequence in close reason")
                         || sanitized.contains("context canceled")
                         || sanitized.contains("broken pipe");
                     let level = if (sanitized.contains("FATAL") || sanitized.contains("ERROR") || sanitized.contains("Access is denied")) && !is_routine_close {

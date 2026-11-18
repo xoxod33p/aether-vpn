@@ -41,3 +41,12 @@ export function getProtocolBadgeColor(protocol: string): string {
       return 'bg-white/10 text-neutral-200 border-white/20';
   }
 }
+
+export function isCloudProfile(profile?: { groupName?: string; id?: string } | null): boolean {
+  if (!profile) return false;
+  return (
+    profile.groupName === 'Free Sync' ||
+    Boolean(profile.id && (profile.id.startsWith('cfg-') || profile.id.startsWith('sync-')))
+  );
+}
+

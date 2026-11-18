@@ -24,6 +24,15 @@ pub async fn save_profile(
     {
         return Err("Cannot edit active server configuration while VPN is connected. Please disconnect first.".to_string());
     }
+
+    if let Ok(Some(existing)) = db.get_profile(&profile.id) {
+        if existing.group_name.as_deref() == Some("Free Sync")
+            || existing.id.starts_with("cfg-")
+            || existing.id.starts_with("sync-")
+        {
+            return Err("Free cloud servers cannot be edited or modified.".to_string());
+        }
+    }
     db.save_profile(&profile).map_err(|e| e.to_string())?;
     Ok(profile)
 }
@@ -86,14 +95,65 @@ struct CloudSyncResponse {
     servers: Option<Vec<serde_json::Value>>,
 }
 
+fn get_env_or_file(key: &str) -> Option<String> {
+    if let Ok(v) = std::env::var(key) {
+        if !v.trim().is_empty() {
+            return Some(v.trim().to_string());
+        }
+    }
+
+    let candidates = [
+        std::path::PathBuf::from(".env"),
+        std::path::PathBuf::from("../.env"),
+        std::env::current_exe()
+            .ok()
+            .and_then(|p| p.parent().map(|d| d.join(".env")))
+            .unwrap_or_default(),
+    ];
+
+    for path in &candidates {
+        if path.exists() {
+            if let Ok(content) = std::fs::read_to_string(path) {
+                for line in content.lines() {
+                    let line = line.trim();
+                    if line.is_empty() || line.starts_with('#') {
+                        continue;
+                    }
+                    if let Some((k, v)) = line.split_once('=') {
+                        if k.trim() == key {
+                            let clean_val = v.trim().trim_matches('"').trim_matches('\'');
+                            if !clean_val.is_empty() {
+                                return Some(clean_val.to_string());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    None
+}
+
 #[tauri::command]
 pub async fn sync_cloud_servers(
     api_url: Option<String>,
     api_key: Option<String>,
     db: State<'_, Database>,
 ) -> Result<Vec<Profile>, String> {
-    let url = api_url.unwrap_or_else(|| "https://aether-backend-drab.vercel.app/api/configs".to_string());
-    let key = api_key.unwrap_or_else(|| "aether_sync_super_secret_key_123".to_string());
+    let url = api_url
+        .or_else(|| get_env_or_file("AETHER_CLOUD_API_URL"))
+        .or_else(|| get_env_or_file("VITE_CLOUD_API_URL"))
+        .or_else(|| option_env!("AETHER_CLOUD_API_URL").map(|s| s.to_string()))
+        .or_else(|| option_env!("VITE_CLOUD_API_URL").map(|s| s.to_string()))
+        .unwrap_or_else(|| "https://aether-backend-drab.vercel.app/api/configs".to_string());
+
+    let key = api_key
+        .or_else(|| get_env_or_file("AETHER_CLOUD_API_KEY"))
+        .or_else(|| get_env_or_file("VITE_CLOUD_API_KEY"))
+        .or_else(|| option_env!("AETHER_CLOUD_API_KEY").map(|s| s.to_string()))
+        .or_else(|| option_env!("VITE_CLOUD_API_KEY").map(|s| s.to_string()))
+        .unwrap_or_else(|| "aether_sync_super_secret_key_123".to_string());
 
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(12))
