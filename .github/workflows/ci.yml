@@ -17,13 +17,30 @@ concurrency:
 jobs:
   test:
     runs-on: windows-latest
-    env:
-      AETHER_CLOUD_API_URL: ${{ secrets.AETHER_CLOUD_API_URL }}
-      AETHER_CLOUD_API_KEY: ${{ secrets.AETHER_CLOUD_API_KEY }}
-      VITE_CLOUD_API_URL: ${{ secrets.AETHER_CLOUD_API_URL }}
-      VITE_CLOUD_API_KEY: ${{ secrets.AETHER_CLOUD_API_KEY }}
     steps:
       - uses: actions/checkout@v4
+      - name: Inject Environment Secrets & Defaults
+        shell: pwsh
+        run: |
+          $apiUrl = "${{ secrets.AETHER_CLOUD_API_URL || secrets.VITE_CLOUD_API_URL }}"
+          if ([string]::IsNullOrWhiteSpace($apiUrl)) {
+            $apiUrl = "https://aether-backend-drab.vercel.app/api/configs"
+          }
+          $apiKey = "${{ secrets.AETHER_CLOUD_API_KEY || secrets.VITE_CLOUD_API_KEY }}"
+          if ([string]::IsNullOrWhiteSpace($apiKey)) {
+            $apiKey = "aether_sync_super_secret_key_123"
+          }
+
+          $envContent = "AETHER_CLOUD_API_URL=$apiUrl`nAETHER_CLOUD_API_KEY=$apiKey`nVITE_CLOUD_API_URL=$apiUrl`nVITE_CLOUD_API_KEY=$apiKey`n"
+          Set-Content -Path ".env" -Value $envContent -Encoding UTF8
+          Set-Content -Path "src-tauri/.env" -Value $envContent -Encoding UTF8
+
+          "AETHER_CLOUD_API_URL=$apiUrl" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding UTF8
+          "AETHER_CLOUD_API_KEY=$apiKey" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding UTF8
+          "VITE_CLOUD_API_URL=$apiUrl" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding UTF8
+          "VITE_CLOUD_API_KEY=$apiKey" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding UTF8
+          Write-Host "Configured environment secrets for build."
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22

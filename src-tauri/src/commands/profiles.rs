@@ -142,17 +142,19 @@ pub async fn sync_cloud_servers(
     db: State<'_, Database>,
 ) -> Result<Vec<Profile>, String> {
     let url = api_url
+        .filter(|s| !s.trim().is_empty())
         .or_else(|| get_env_or_file("AETHER_CLOUD_API_URL"))
         .or_else(|| get_env_or_file("VITE_CLOUD_API_URL"))
-        .or_else(|| option_env!("AETHER_CLOUD_API_URL").map(|s| s.to_string()))
-        .or_else(|| option_env!("VITE_CLOUD_API_URL").map(|s| s.to_string()))
+        .or_else(|| option_env!("AETHER_CLOUD_API_URL").filter(|s| !s.trim().is_empty()).map(|s| s.to_string()))
+        .or_else(|| option_env!("VITE_CLOUD_API_URL").filter(|s| !s.trim().is_empty()).map(|s| s.to_string()))
         .unwrap_or_else(|| "https://aether-backend-drab.vercel.app/api/configs".to_string());
 
     let key = api_key
+        .filter(|s| !s.trim().is_empty())
         .or_else(|| get_env_or_file("AETHER_CLOUD_API_KEY"))
         .or_else(|| get_env_or_file("VITE_CLOUD_API_KEY"))
-        .or_else(|| option_env!("AETHER_CLOUD_API_KEY").map(|s| s.to_string()))
-        .or_else(|| option_env!("VITE_CLOUD_API_KEY").map(|s| s.to_string()))
+        .or_else(|| option_env!("AETHER_CLOUD_API_KEY").filter(|s| !s.trim().is_empty()).map(|s| s.to_string()))
+        .or_else(|| option_env!("VITE_CLOUD_API_KEY").filter(|s| !s.trim().is_empty()).map(|s| s.to_string()))
         .unwrap_or_else(|| "aether_sync_super_secret_key_123".to_string());
 
     let client = reqwest::Client::builder()

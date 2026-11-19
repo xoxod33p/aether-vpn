@@ -82,14 +82,31 @@ jobs:
             args: '--bundles deb'
 
     runs-on: ${{ matrix.platform }}
-    env:
-      AETHER_CLOUD_API_URL: ${{ secrets.AETHER_CLOUD_API_URL }}
-      AETHER_CLOUD_API_KEY: ${{ secrets.AETHER_CLOUD_API_KEY }}
-      VITE_CLOUD_API_URL: ${{ secrets.AETHER_CLOUD_API_URL }}
-      VITE_CLOUD_API_KEY: ${{ secrets.AETHER_CLOUD_API_KEY }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Inject Environment Secrets & Defaults
+        shell: pwsh
+        run: |
+          $apiUrl = "${{ secrets.AETHER_CLOUD_API_URL || secrets.VITE_CLOUD_API_URL }}"
+          if ([string]::IsNullOrWhiteSpace($apiUrl)) {
+            $apiUrl = "https://aether-backend-drab.vercel.app/api/configs"
+          }
+          $apiKey = "${{ secrets.AETHER_CLOUD_API_KEY || secrets.VITE_CLOUD_API_KEY }}"
+          if ([string]::IsNullOrWhiteSpace($apiKey)) {
+            $apiKey = "aether_sync_super_secret_key_123"
+          }
+
+          $envContent = "AETHER_CLOUD_API_URL=$apiUrl`nAETHER_CLOUD_API_KEY=$apiKey`nVITE_CLOUD_API_URL=$apiUrl`nVITE_CLOUD_API_KEY=$apiKey`n"
+          Set-Content -Path ".env" -Value $envContent -Encoding UTF8
+          Set-Content -Path "src-tauri/.env" -Value $envContent -Encoding UTF8
+
+          "AETHER_CLOUD_API_URL=$apiUrl" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding UTF8
+          "AETHER_CLOUD_API_KEY=$apiKey" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding UTF8
+          "VITE_CLOUD_API_URL=$apiUrl" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding UTF8
+          "VITE_CLOUD_API_KEY=$apiKey" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding UTF8
+          Write-Host "Configured environment secrets and generated .env files."
 
       - name: Apply Resolved Release Version
         shell: pwsh
@@ -185,10 +202,10 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          AETHER_CLOUD_API_URL: ${{ secrets.AETHER_CLOUD_API_URL }}
-          AETHER_CLOUD_API_KEY: ${{ secrets.AETHER_CLOUD_API_KEY }}
-          VITE_CLOUD_API_URL: ${{ secrets.AETHER_CLOUD_API_URL }}
-          VITE_CLOUD_API_KEY: ${{ secrets.AETHER_CLOUD_API_KEY }}
+          AETHER_CLOUD_API_URL: ${{ env.AETHER_CLOUD_API_URL }}
+          AETHER_CLOUD_API_KEY: ${{ env.AETHER_CLOUD_API_KEY }}
+          VITE_CLOUD_API_URL: ${{ env.VITE_CLOUD_API_URL }}
+          VITE_CLOUD_API_KEY: ${{ env.VITE_CLOUD_API_KEY }}
         with:
           tagName: v__VERSION__
           releaseName: 'AetherVPN v__VERSION__'

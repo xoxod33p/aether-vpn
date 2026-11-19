@@ -210,12 +210,16 @@ export function useVpnStore() {
       publicIp?: string
     ) => {
       try {
+        const envUrl = (import.meta as any).env?.VITE_CLOUD_API_URL;
+        const envKey = (import.meta as any).env?.VITE_CLOUD_API_KEY;
         const rawSyncUrl =
-          (import.meta as any).env?.VITE_CLOUD_API_URL ||
-          'https://aether-backend-drab.vercel.app/api/configs';
+          envUrl && String(envUrl).trim().length > 0
+            ? String(envUrl).trim()
+            : 'https://aether-backend-drab.vercel.app/api/configs';
         const apiKey =
-          (import.meta as any).env?.VITE_CLOUD_API_KEY ||
-          'aether_sync_super_secret_key_123';
+          envKey && String(envKey).trim().length > 0
+            ? String(envKey).trim()
+            : 'aether_sync_super_secret_key_123';
 
         let devicesUrl = rawSyncUrl;
         if (devicesUrl.includes('/api/configs')) {
@@ -484,8 +488,16 @@ export function useVpnStore() {
       } else {
         const defaultApiUrl = 'https://aether-backend-drab.vercel.app/api/configs';
         const defaultApiKey = 'aether_sync_super_secret_key_123';
-        const apiUrl = import.meta.env.VITE_CLOUD_API_URL || defaultApiUrl;
-        const apiKey = import.meta.env.VITE_CLOUD_API_KEY || defaultApiKey;
+        const envUrl = (import.meta as any).env?.VITE_CLOUD_API_URL;
+        const envKey = (import.meta as any).env?.VITE_CLOUD_API_KEY;
+        const apiUrl =
+          envUrl && String(envUrl).trim().length > 0
+            ? String(envUrl).trim()
+            : defaultApiUrl;
+        const apiKey =
+          envKey && String(envKey).trim().length > 0
+            ? String(envKey).trim()
+            : defaultApiKey;
         const res = await fetch(`${apiUrl}?key=${apiKey}`, {
           headers: { 'X-API-Key': apiKey },
         });
