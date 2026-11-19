@@ -51,16 +51,18 @@ impl SingboxConfigBuilder {
                     "8.8.8.8/32".to_string(),
                     "8.8.4.4/32".to_string(),
                 ];
-                for ip in &resolved_ips {
-                    let cidr = if ip.contains(':') {
-                        format!("{}/128", ip)
-                    } else {
-                        format!("{}/32", ip)
-                    };
-                    if !exclude_addrs.contains(&cidr) {
-                        exclude_addrs.push(cidr);
+
+                // If WireGuard is used with an internal subnet (e.g. 10.x.x.x), allow that tunneled network
+                if profile.protocol == VpnProtocol::Wireguard {
+                    if let Some(ref addr) = profile.wg_address {
+                        if addr.starts_with("10.") {
+                            exclude_addrs.retain(|a| a != "10.0.0.0/8");
+                        } else if addr.starts_with("172.") {
+                            exclude_addrs.retain(|a| a != "172.16.0.0/12");
+                        }
                     }
                 }
+
                 inbounds.push(json!({
                     "type": "tun",
                     "tag": "tun-in",
@@ -101,39 +103,12 @@ impl SingboxConfigBuilder {
             }),
         ];
 
-        let mut direct_domains = Vec::new();
-        if !profile.server.is_empty() {
-            direct_domains.push(profile.server.clone());
-        }
-        if let Some(ref host) = profile.transport_host {
-            if !host.is_empty() {
-                direct_domains.push(host.clone());
-            }
-        }
-        if let Some(ref sni) = profile.server_name {
-            if !sni.is_empty() {
-                direct_domains.push(sni.clone());
-            }
-        }
-        direct_domains.sort();
-        direct_domains.dedup();
-
-        let mut direct_ips = vec![
+        let direct_ips = vec![
             "1.1.1.1/32".to_string(),
             "1.0.0.1/32".to_string(),
             "8.8.8.8/32".to_string(),
             "8.8.4.4/32".to_string(),
         ];
-        for ip in &resolved_ips {
-            let cidr = if ip.contains(':') {
-                format!("{}/128", ip)
-            } else {
-                format!("{}/32", ip)
-            };
-            if !direct_ips.contains(&cidr) {
-                direct_ips.push(cidr);
-            }
-        }
 
         let mut route_rules = vec![
             json!({
@@ -150,23 +125,37 @@ impl SingboxConfigBuilder {
                 "ip_cidr": direct_ips,
                 "outbound": "direct"
             }),
-            json!({
-                "ip_is_private": true,
-                "outbound": "direct"
-            }),
-            json!({
-                "domain": ["localhost"],
-                "domain_suffix": [".local", ".lan", ".localhost"],
-                "outbound": "direct"
-            }),
         ];
 
-        if !direct_domains.is_empty() {
-            route_rules.push(json!({
-                "domain": direct_domains,
-                "outbound": "direct"
-            }));
+        // If WireGuard has a tunneled private network address, route that tunneled network to proxy
+        if profile.protocol == VpnProtocol::Wireguard {
+            if let Some(ref addr) = profile.wg_address {
+                let subnet = if let Some((ip, _)) = addr.split_once('/') {
+                    let parts: Vec<&str> = ip.split('.').collect();
+                    if parts.len() == 4 {
+                        format!("{}.{}.{}.0/24", parts[0], parts[1], parts[2])
+                    } else {
+                        addr.clone()
+                    }
+                } else {
+                    addr.clone()
+                };
+                route_rules.push(json!({
+                    "ip_cidr": [subnet],
+                    "outbound": "proxy"
+                }));
+            }
         }
+
+        route_rules.push(json!({
+            "ip_is_private": true,
+            "outbound": "direct"
+        }));
+        route_rules.push(json!({
+            "domain": ["localhost"],
+            "domain_suffix": [".local", ".lan", ".localhost"],
+            "outbound": "direct"
+        }));
 
         for r in rules.iter().filter(|r| r.is_enabled) {
             let is_block = matches!(r.action, RoutingAction::Block);
@@ -247,9 +236,18 @@ impl SingboxConfigBuilder {
             }),
         ];
 
-        if !direct_domains.is_empty() {
+        let bootstrap_domains: Vec<String> = vec![
+            profile.server.clone(),
+            profile.transport_host.clone().unwrap_or_default(),
+            profile.server_name.clone().unwrap_or_default(),
+        ]
+        .into_iter()
+        .filter(|d| !d.is_empty() && d.parse::<std::net::IpAddr>().is_err())
+        .collect();
+
+        if !bootstrap_domains.is_empty() {
             dns_rules.push(json!({
-                "domain": direct_domains,
+                "domain": bootstrap_domains,
                 "server": "direct-dns"
             }));
         }
