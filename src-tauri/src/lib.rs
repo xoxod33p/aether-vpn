@@ -8,6 +8,7 @@ pub mod network;
 use commands::*;
 use core::ConnectionManager;
 use storage::Database;
+#[allow(unused_imports)]
 use tauri::Manager;
 use tracing_subscriber::EnvFilter;
 
@@ -57,9 +58,10 @@ pub fn run() {
     let conn_mgr = ConnectionManager::new(db.clone());
 
     tauri::Builder::default()
-        .setup(|app| {
+        .setup(|_app| {
             #[cfg(desktop)]
             {
+                let app = _app;
                 if let Some(window) = app.get_webview_window("main") {
                     let _ = window.center();
                     let icon_bytes = include_bytes!("../icons/icon.png");
@@ -120,12 +122,12 @@ pub fn run() {
 
             Ok(())
         })
-        .on_window_event(|window, event| {
+        .on_window_event(|_window, _event| {
             #[cfg(desktop)]
-            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+            if let tauri::WindowEvent::CloseRequested { api, .. } = _event {
                 api.prevent_close();
-                let _ = window.hide();
-                let conn_mgr = window.state::<ConnectionManager>();
+                let _ = _window.hide();
+                let conn_mgr = _window.state::<ConnectionManager>();
                 let mgr = conn_mgr.inner().clone();
                 tauri::async_runtime::spawn(async move {
                     let disconnect_fut = mgr.disconnect();
