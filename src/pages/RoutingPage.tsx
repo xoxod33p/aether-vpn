@@ -226,7 +226,6 @@ export const RoutingPage: React.FC<RoutingPageProps> = ({ store }) => {
                   required
                   value={newRule.name}
                   onChange={(e) => setNewRule({ ...newRule, name: e.target.value })}
-                  placeholder="e.g. Bypass Local Streaming"
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500"
                 />
               </div>
@@ -285,7 +284,6 @@ export const RoutingPage: React.FC<RoutingPageProps> = ({ store }) => {
                   required
                   value={newRule.ruleValue}
                   onChange={(e) => setNewRule({ ...newRule, ruleValue: e.target.value })}
-                  placeholder="e.g. netflix.com, 10.0.0.0/8, geoip:us"
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-cyan-500"
                 />
               </div>

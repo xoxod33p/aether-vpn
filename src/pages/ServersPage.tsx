@@ -654,7 +654,6 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                       type="text"
                       value={manualName}
                       onChange={(e) => setManualName(e.target.value)}
-                      placeholder="e.g. US Edge 01"
                       className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40"
                     />
                   </div>
@@ -666,7 +665,6 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                       type="text"
                       value={manualCountryCode}
                       onChange={(e) => setManualCountryCode(e.target.value)}
-                      placeholder="US, SG, JP..."
                       maxLength={4}
                       className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40 uppercase font-mono text-center"
                     />
@@ -682,7 +680,6 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                       type="text"
                       value={manualServer}
                       onChange={(e) => setManualServer(e.target.value)}
-                      placeholder="1.2.3.4 or vpn.domain.com"
                       className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40 font-mono text-[11px]"
                     />
                   </div>
@@ -709,7 +706,6 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                         type="text"
                         value={manualUuid}
                         onChange={(e) => setManualUuid(e.target.value)}
-                        placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
                         className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40 font-mono text-[11px]"
                       />
                     </div>
@@ -755,7 +751,6 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                         type="text"
                         value={manualUuid}
                         onChange={(e) => setManualUuid(e.target.value)}
-                        placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
                         className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40 font-mono text-[11px]"
                       />
                     </div>
@@ -783,7 +778,6 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                           type="number"
                           value={manualAlterId}
                           onChange={(e) => setManualAlterId(Number(e.target.value))}
-                          placeholder="0"
                           className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40 font-mono"
                         />
                       </div>
@@ -801,7 +795,6 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                         type="text"
                         value={manualPassword}
                         onChange={(e) => setManualPassword(e.target.value)}
-                        placeholder="Secret password"
                         className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40 font-mono text-[11px]"
                       />
                     </div>
@@ -835,7 +828,6 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                       type="text"
                       value={manualPassword}
                       onChange={(e) => setManualPassword(e.target.value)}
-                      placeholder="Password"
                       className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40 font-mono text-[11px]"
                     />
                   </div>
@@ -851,7 +843,6 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                         type="text"
                         value={manualUsername}
                         onChange={(e) => setManualUsername(e.target.value)}
-                        placeholder="User"
                         className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40"
                       />
                     </div>
@@ -863,7 +854,6 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                         type="text"
                         value={manualPassword}
                         onChange={(e) => setManualPassword(e.target.value)}
-                        placeholder="Pass"
                         className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40"
                       />
                     </div>
@@ -880,7 +870,6 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                         type="text"
                         value={manualWgPrivateKey}
                         onChange={(e) => setManualWgPrivateKey(e.target.value)}
-                        placeholder="Base64 WireGuard Private Key"
                         className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40 font-mono text-[11px]"
                       />
                     </div>
@@ -892,7 +881,6 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                         type="text"
                         value={manualWgPublicKey}
                         onChange={(e) => setManualWgPublicKey(e.target.value)}
-                        placeholder="Base64 WireGuard Public Key"
                         className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40 font-mono text-[11px]"
                       />
                     </div>
@@ -905,7 +893,6 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                           type="text"
                           value={manualWgAddress}
                           onChange={(e) => setManualWgAddress(e.target.value)}
-                          placeholder="10.14.0.2/32"
                           className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40 font-mono text-[11px]"
                         />
                       </div>
@@ -917,7 +904,6 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                           type="number"
                           value={manualWgMtu}
                           onChange={(e) => setManualWgMtu(Number(e.target.value))}
-                          placeholder="1420"
                           className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40 font-mono"
                         />
                       </div>
@@ -930,7 +916,6 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                         type="text"
                         value={manualWgDns}
                         onChange={(e) => setManualWgDns(e.target.value)}
-                        placeholder="1.1.1.1, 8.8.8.8"
                         className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40 font-mono text-[11px]"
                       />
                     </div>
@@ -977,7 +962,6 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                                 type="text"
                                 value={manualSni}
                                 onChange={(e) => setManualSni(e.target.value)}
-                                placeholder="e.g. server.domain.com"
                                 className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40 font-mono text-[11px]"
                               />
                             </div>
@@ -1011,7 +995,6 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                                   type="text"
                                   value={manualAlpn}
                                   onChange={(e) => setManualAlpn(e.target.value)}
-                                  placeholder="h2,http/1.1"
                                   className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40 font-mono text-[11px]"
                                 />
                               </div>
@@ -1041,7 +1024,6 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                                   type="text"
                                   value={manualRealityPubKey}
                                   onChange={(e) => setManualRealityPubKey(e.target.value)}
-                                  placeholder="Reality base64 public key"
                                   className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40 font-mono text-[11px]"
                                 />
                               </div>
@@ -1053,7 +1035,6 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                                   type="text"
                                   value={manualRealityShortId}
                                   onChange={(e) => setManualRealityShortId(e.target.value)}
-                                  placeholder="Hex short ID (e.g. 0123456789abcdef)"
                                   className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40 font-mono text-[11px]"
                                 />
                               </div>
@@ -1114,7 +1095,6 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                                 type="text"
                                 value={manualTransportPath}
                                 onChange={(e) => setManualTransportPath(e.target.value)}
-                                placeholder={manualTransport === 'grpc' ? 'grpc' : '/'}
                                 className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40 font-mono text-[11px]"
                               />
                             </div>
@@ -1128,7 +1108,6 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                                   type="text"
                                   value={manualTransportHost}
                                   onChange={(e) => setManualTransportHost(e.target.value)}
-                                  placeholder="e.g. cdn.domain.com"
                                   className="w-full bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-white/40 font-mono text-[11px]"
                                 />
                               </div>

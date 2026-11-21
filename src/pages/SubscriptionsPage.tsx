@@ -243,7 +243,6 @@ export const SubscriptionsPage: React.FC<SubscriptionsPageProps> = ({ store }) =
                   required
                   value={newSub.name}
                   onChange={(e) => setNewSub({ ...newSub, name: e.target.value })}
-                  placeholder="e.g. Aether Primary Feed"
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500"
                 />
               </div>
@@ -257,7 +256,6 @@ export const SubscriptionsPage: React.FC<SubscriptionsPageProps> = ({ store }) =
                   required
                   value={newSub.url}
                   onChange={(e) => setNewSub({ ...newSub, url: e.target.value })}
-                  placeholder="https://example.com/api/v1/client/subscribe"
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-cyan-500"
                 />
               </div>

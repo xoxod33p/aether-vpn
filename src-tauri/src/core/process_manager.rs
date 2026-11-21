@@ -29,7 +29,7 @@ impl ProcessManager {
         #[cfg(windows)]
         {
             let _ = crate::core::silent_command("taskkill")
-                .args(["/F", "/IM", "sing-box.exe", "/IM", "badvpn-tun2socks.exe"])
+                .args(["/F", "/T", "/IM", "sing-box.exe", "/IM", "badvpn-tun2socks.exe"])
                 .output();
 
             let _ = crate::core::silent_command("route")
@@ -41,16 +41,11 @@ impl ProcessManager {
                 .output();
 
             let _ = crate::core::silent_command("netsh")
-                .args(["interface", "set", "interface", "name=\"AetherTun\"", "admin=DISABLED"])
+                .args(["interface", "set", "interface", "name=AetherTun", "admin=DISABLED"])
                 .output();
 
-            let _ = crate::core::silent_command("powershell")
-                .args([
-                    "-NoProfile",
-                    "-NonInteractive",
-                    "-Command",
-                    "Get-NetAdapter | Where-Object { $_.InterfaceDescription -like '*Wintun*' -or $_.Name -like 'Aether*' -or ($_.InterfaceDescription -like '*TAP-Windows*' -and $_.Status -eq 'Up') } | ForEach-Object { Disable-NetAdapter -Name $_.Name -Confirm:$false -ErrorAction SilentlyContinue; Remove-NetRoute -InterfaceIndex $_.InterfaceIndex -Confirm:$false -ErrorAction SilentlyContinue }; ipconfig /flushdns",
-                ])
+            let _ = crate::core::silent_command("cmd")
+                .args(["/C", "ipconfig /flushdns"])
                 .output();
         }
         #[cfg(not(windows))]
@@ -178,6 +173,11 @@ impl ProcessManager {
         let mut child = cmd.spawn()
             .map_err(|e| format!("Failed to spawn sing-box engine: {}", e))?;
 
+        #[cfg(windows)]
+        if let Some(pid) = child.id() {
+            assign_process_to_kill_on_close_job(pid);
+        }
+
         let stdout = child.stdout.take();
         let stderr = child.stderr.take();
 
@@ -294,4 +294,90 @@ fn sanitize_log_line(line: &str) -> String {
     out = pass_regex.replace_all(&out, "$1=[REDACTED]").to_string();
 
     out
+}
+
+#[cfg(windows)]
+fn assign_process_to_kill_on_close_job(pid: u32) {
+    type HANDLE = *mut std::ffi::c_void;
+    type BOOL = i32;
+
+    #[repr(C)]
+    struct IO_COUNTERS {
+        read_operation_count: u64,
+        write_operation_count: u64,
+        other_operation_count: u64,
+        read_transfer_count: u64,
+        write_transfer_count: u64,
+        other_transfer_count: u64,
+    }
+
+    #[repr(C)]
+    struct JOBOBJECT_BASIC_LIMIT_INFORMATION {
+        per_process_user_time_limit: i64,
+        per_job_user_time_limit: i64,
+        limit_flags: u32,
+        minimum_working_set_size: usize,
+        maximum_working_set_size: usize,
+        active_process_limit: u32,
+        affinity: usize,
+        priority_class: u32,
+        scheduling_class: u32,
+    }
+
+    #[repr(C)]
+    struct JOBOBJECT_EXTENDED_LIMIT_INFORMATION {
+        basic_limit_information: JOBOBJECT_BASIC_LIMIT_INFORMATION,
+        io_info: IO_COUNTERS,
+        process_memory_limit: usize,
+        job_memory_limit: usize,
+        peak_process_memory_used: usize,
+        peak_job_memory_used: usize,
+    }
+
+    const JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE: u32 = 0x2000;
+    const JOB_OBJECT_EXTENDED_LIMIT_INFORMATION: i32 = 9;
+    const PROCESS_SET_QUOTA: u32 = 0x0100;
+    const PROCESS_TERMINATE: u32 = 0x0001;
+
+    unsafe extern "system" {
+        fn CreateJobObjectW(job_attributes: *mut std::ffi::c_void, name: *const u16) -> HANDLE;
+        fn SetInformationJobObject(
+            job: HANDLE,
+            info_class: i32,
+            info: *mut std::ffi::c_void,
+            info_length: u32,
+        ) -> BOOL;
+        fn AssignProcessToJobObject(job: HANDLE, process: HANDLE) -> BOOL;
+        fn OpenProcess(desired_access: u32, inherit_handle: BOOL, process_id: u32) -> HANDLE;
+        fn CloseHandle(handle: HANDLE) -> BOOL;
+    }
+
+    unsafe {
+        static JOB_HANDLE: std::sync::atomic::AtomicPtr<std::ffi::c_void> =
+            std::sync::atomic::AtomicPtr::new(std::ptr::null_mut());
+
+        let mut job = JOB_HANDLE.load(std::sync::atomic::Ordering::SeqCst);
+        if job.is_null() {
+            job = CreateJobObjectW(std::ptr::null_mut(), std::ptr::null());
+            if !job.is_null() {
+                let mut info: JOBOBJECT_EXTENDED_LIMIT_INFORMATION = std::mem::zeroed();
+                info.basic_limit_information.limit_flags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+                SetInformationJobObject(
+                    job,
+                    JOB_OBJECT_EXTENDED_LIMIT_INFORMATION,
+                    &mut info as *mut _ as *mut std::ffi::c_void,
+                    std::mem::size_of::<JOBOBJECT_EXTENDED_LIMIT_INFORMATION>() as u32,
+                );
+                JOB_HANDLE.store(job, std::sync::atomic::Ordering::SeqCst);
+            }
+        }
+
+        if !job.is_null() {
+            let proc_handle = OpenProcess(PROCESS_SET_QUOTA | PROCESS_TERMINATE, 0, pid);
+            if !proc_handle.is_null() {
+                AssignProcessToJobObject(job, proc_handle);
+                CloseHandle(proc_handle);
+            }
+        }
+    }
 }

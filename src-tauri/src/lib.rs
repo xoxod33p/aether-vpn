@@ -80,7 +80,17 @@ pub fn run() {
                     .on_menu_event(|app, event| {
                         match event.id.as_ref() {
                             "quit" => {
-                                app.exit(0);
+                                let conn_mgr = app.state::<ConnectionManager>();
+                                let mgr = conn_mgr.inner().clone();
+                                tauri::async_runtime::spawn(async move {
+                                    let disconnect_fut = mgr.disconnect();
+                                    tokio::select! {
+                                        _ = disconnect_fut => {},
+                                        _ = tokio::time::sleep(tokio::time::Duration::from_millis(1000)) => {},
+                                    }
+                                    core::ProcessManager::cleanup_virtual_adapters();
+                                    std::process::exit(0);
+                                });
                             }
                             "show" => {
                                 if let Some(window) = app.get_webview_window("main") {
@@ -110,15 +120,15 @@ pub fn run() {
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
                 api.prevent_close();
+                let _ = window.hide();
                 let conn_mgr = window.state::<ConnectionManager>();
                 let mgr = conn_mgr.inner().clone();
                 tauri::async_runtime::spawn(async move {
-                    tokio::spawn(async {
-                        tokio::time::sleep(tokio::time::Duration::from_millis(1500)).await;
-                        core::ProcessManager::cleanup_virtual_adapters();
-                        std::process::exit(0);
-                    });
-                    let _ = mgr.disconnect().await;
+                    let disconnect_fut = mgr.disconnect();
+                    tokio::select! {
+                        _ = disconnect_fut => {},
+                        _ = tokio::time::sleep(tokio::time::Duration::from_millis(1000)) => {},
+                    }
                     core::ProcessManager::cleanup_virtual_adapters();
                     std::process::exit(0);
                 });
@@ -159,6 +169,11 @@ pub fn run() {
             backup_database,
             get_device_id,
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running AetherVPN application");
+        .build(tauri::generate_context!())
+        .expect("error while building AetherVPN application")
+        .run(|_app_handle, event| {
+            if let tauri::RunEvent::ExitRequested { .. } | tauri::RunEvent::Exit = event {
+                core::ProcessManager::cleanup_virtual_adapters();
+            }
+        });
 }
