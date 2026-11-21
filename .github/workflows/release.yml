@@ -256,3 +256,142 @@ jobs:
               gh release upload $tag $_.FullName --clobber
             }
           }
+
+  build-android:
+    needs: [resolve-version, build-tauri]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '21'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android NDK & Build Tools
+        run: |
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "ndk;26.1.10909125" "build-tools;34.0.0" "platforms;android-34"
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/26.1.10909125" >> $GITHUB_ENV
+          echo "NDK_HOME=$ANDROID_HOME/ndk/26.1.10909125" >> $GITHUB_ENV
+
+      - name: Install Rust toolchain with Android targets
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Inject Environment Secrets & Defaults
+        shell: pwsh
+        run: |
+          $apiUrl = "${{ secrets.AETHER_CLOUD_API_URL || secrets.VITE_CLOUD_API_URL }}"
+          if ([string]::IsNullOrWhiteSpace($apiUrl)) {
+            $apiUrl = "https://aether-backend-drab.vercel.app/api/configs"
+          }
+          $apiKey = "${{ secrets.AETHER_CLOUD_API_KEY || secrets.VITE_CLOUD_API_KEY }}"
+          if ([string]::IsNullOrWhiteSpace($apiKey)) {
+            $apiKey = "aether_sync_super_secret_key_123"
+          }
+
+          $envContent = "AETHER_CLOUD_API_URL=$apiUrl`nAETHER_CLOUD_API_KEY=$apiKey`nVITE_CLOUD_API_URL=$apiUrl`nVITE_CLOUD_API_KEY=$apiKey`n"
+          Set-Content -Path ".env" -Value $envContent -Encoding UTF8
+          Set-Content -Path "src-tauri/.env" -Value $envContent -Encoding UTF8
+
+          "AETHER_CLOUD_API_URL=$apiUrl" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding UTF8
+          "AETHER_CLOUD_API_KEY=$apiKey" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding UTF8
+          "VITE_CLOUD_API_URL=$apiUrl" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding UTF8
+          "VITE_CLOUD_API_KEY=$apiKey" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding UTF8
+
+      - name: Apply Resolved Release Version
+        shell: pwsh
+        run: |
+          $ver = "${{ needs.resolve-version.outputs.version }}"
+          Write-Host "Configuring build for version: $ver"
+          
+          $tPath = (Resolve-Path "src-tauri/tauri.conf.json").Path
+          $tRaw = Get-Content $tPath -Raw
+          $tRaw = $tRaw -replace '"version"\s*:\s*"[^"]+"', "`"version`": `"$ver`""
+          Set-Content -Path $tPath -Value $tRaw -NoNewline
+
+          $pPath = (Resolve-Path "package.json").Path
+          $pRaw = Get-Content $pPath -Raw
+          $pRaw = $pRaw -replace '"version"\s*:\s*"[^"]+"', "`"version`": `"$ver`""
+          Set-Content -Path $pPath -Value $pRaw -NoNewline
+
+          $cPath = (Resolve-Path "src-tauri/Cargo.toml").Path
+          $lines = Get-Content $cPath
+          for ($idx = 0; $idx -lt $lines.Length; $idx++) {
+            if ($lines[$idx] -match '^version\s*=') {
+              $lines[$idx] = "version = `"$ver`""
+              break
+            }
+          }
+          $lines | Set-Content -Path $cPath
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build Frontend Application
+        run: npm run build
+
+      - name: Initialize Android Target
+        run: |
+          if [ ! -d "src-tauri/gen/android" ]; then
+            npx tauri android init
+          fi
+
+      - name: Build Android APK
+        run: |
+          npx tauri android build --apk --target aarch64-linux-android
+
+      - name: Sign Android APK
+        shell: pwsh
+        run: |
+          $ver = "${{ needs.resolve-version.outputs.version }}"
+          keytool -genkeypair -v -keystore release.keystore -alias aethervpn -keyalg RSA -keysize 2048 -validity 10000 -storepass aethervpnpass -keypass aethervpnpass -dname "CN=AetherVPN, OU=Release, O=AetherVPN, L=Global, S=Global, C=US"
+          
+          $buildToolsDir = Get-ChildItem "$env:ANDROID_HOME/build-tools" | Sort-Object Name -Descending | Select-Object -First 1
+          $apksigner = "$($buildToolsDir.FullName)/apksigner"
+          
+          New-Item -ItemType Directory -Force -Path "android-release"
+          $apks = Get-ChildItem -Path "src-tauri/gen/android" -Recurse -Filter "*.apk"
+          foreach ($apk in $apks) {
+            $signedName = "AetherVPN_${ver}_arm64.apk"
+            $outApk = "android-release/$signedName"
+            & $apksigner sign --ks release.keystore --ks-pass pass:aethervpnpass --key-pass pass:aethervpnpass --out $outApk $apk.FullName
+            Write-Host "Signed APK created at: $outApk"
+          }
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-android-apk
+          path: android-release/*.apk
+          if-no-files-found: ignore
+
+      - name: Upload Android APK to GitHub Release
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: pwsh
+        run: |
+          $ver = "${{ needs.resolve-version.outputs.version }}"
+          $tag = "v$ver"
+          $apks = Get-ChildItem -Path "android-release" -Filter "*.apk"
+          foreach ($apk in $apks) {
+            Write-Host "Uploading to Release ${tag}: $($apk.Name)"
+            gh release upload $tag $apk.FullName --clobber
+          }

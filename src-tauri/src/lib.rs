@@ -58,66 +58,70 @@ pub fn run() {
 
     tauri::Builder::default()
         .setup(|app| {
-            if let Some(window) = app.get_webview_window("main") {
-                let _ = window.center();
-                let icon_bytes = include_bytes!("../icons/icon.png");
-                if let Ok(icon) = tauri::image::Image::from_bytes(icon_bytes) {
-                    let _ = window.set_icon(icon);
+            #[cfg(desktop)]
+            {
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.center();
+                    let icon_bytes = include_bytes!("../icons/icon.png");
+                    if let Ok(icon) = tauri::image::Image::from_bytes(icon_bytes) {
+                        let _ = window.set_icon(icon);
+                    }
                 }
-            }
 
-            let icon_bytes = include_bytes!("../icons/icon.png");
-            if let Ok(tray_icon_img) = tauri::image::Image::from_bytes(icon_bytes) {
-                let show_i = tauri::menu::MenuItem::with_id(app, "show", "Show AetherVPN", true, None::<&str>)?;
-                let quit_i = tauri::menu::MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
-                let menu = tauri::menu::Menu::with_items(app, &[&show_i, &quit_i])?;
+                let icon_bytes = include_bytes!("../icons/icon.png");
+                if let Ok(tray_icon_img) = tauri::image::Image::from_bytes(icon_bytes) {
+                    let show_i = tauri::menu::MenuItem::with_id(app, "show", "Show AetherVPN", true, None::<&str>)?;
+                    let quit_i = tauri::menu::MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
+                    let menu = tauri::menu::Menu::with_items(app, &[&show_i, &quit_i])?;
 
-                let _tray = tauri::tray::TrayIconBuilder::with_id("main-tray")
-                    .icon(tray_icon_img)
-                    .tooltip("AetherVPN")
-                    .menu(&menu)
-                    .show_menu_on_left_click(false)
-                    .on_menu_event(|app, event| {
-                        match event.id.as_ref() {
-                            "quit" => {
-                                let conn_mgr = app.state::<ConnectionManager>();
-                                let mgr = conn_mgr.inner().clone();
-                                tauri::async_runtime::spawn(async move {
-                                    let disconnect_fut = mgr.disconnect();
-                                    tokio::select! {
-                                        _ = disconnect_fut => {},
-                                        _ = tokio::time::sleep(tokio::time::Duration::from_millis(1000)) => {},
+                    let _tray = tauri::tray::TrayIconBuilder::with_id("main-tray")
+                        .icon(tray_icon_img)
+                        .tooltip("AetherVPN")
+                        .menu(&menu)
+                        .show_menu_on_left_click(false)
+                        .on_menu_event(|app, event| {
+                            match event.id.as_ref() {
+                                "quit" => {
+                                    let conn_mgr = app.state::<ConnectionManager>();
+                                    let mgr = conn_mgr.inner().clone();
+                                    tauri::async_runtime::spawn(async move {
+                                        let disconnect_fut = mgr.disconnect();
+                                        tokio::select! {
+                                            _ = disconnect_fut => {},
+                                            _ = tokio::time::sleep(tokio::time::Duration::from_millis(1000)) => {},
+                                        }
+                                        core::ProcessManager::cleanup_virtual_adapters();
+                                        std::process::exit(0);
+                                    });
+                                }
+                                "show" => {
+                                    if let Some(window) = app.get_webview_window("main") {
+                                        let _ = window.show();
+                                        let _ = window.unminimize();
+                                        let _ = window.set_focus();
                                     }
-                                    core::ProcessManager::cleanup_virtual_adapters();
-                                    std::process::exit(0);
-                                });
+                                }
+                                _ => {}
                             }
-                            "show" => {
+                        })
+                        .on_tray_icon_event(|tray, event| {
+                            if let tauri::tray::TrayIconEvent::Click { button: tauri::tray::MouseButton::Left, button_state: tauri::tray::MouseButtonState::Up, .. } = event {
+                                let app = tray.app_handle();
                                 if let Some(window) = app.get_webview_window("main") {
                                     let _ = window.show();
                                     let _ = window.unminimize();
                                     let _ = window.set_focus();
                                 }
                             }
-                            _ => {}
-                        }
-                    })
-                    .on_tray_icon_event(|tray, event| {
-                        if let tauri::tray::TrayIconEvent::Click { button: tauri::tray::MouseButton::Left, button_state: tauri::tray::MouseButtonState::Up, .. } = event {
-                            let app = tray.app_handle();
-                            if let Some(window) = app.get_webview_window("main") {
-                                let _ = window.show();
-                                let _ = window.unminimize();
-                                let _ = window.set_focus();
-                            }
-                        }
-                    })
-                    .build(app)?;
+                        })
+                        .build(app)?;
+                }
             }
 
             Ok(())
         })
         .on_window_event(|window, event| {
+            #[cfg(desktop)]
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
                 api.prevent_close();
                 let _ = window.hide();
