@@ -183,7 +183,7 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
   };
 
   const handleOpenEdit = (profile: Profile) => {
-    if (isVpnConnected || isCloudProfile(profile)) {
+    if (isVpnConnected && profile.id === connectionInfo.activeProfileId) {
       return;
     }
     setEditingProfile(profile);
@@ -299,7 +299,19 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
 
     if (editingProfile) {
       if (isCloudProfile(editingProfile)) {
-        setImportError('Cloud-synced free servers cannot be modified.');
+        if (isVpnConnected && editingProfile.id === connectionInfo.activeProfileId) {
+          setImportError('Cannot edit active server configuration while VPN is connected. Please disconnect first.');
+          return;
+        }
+        const updatedProfile: Profile = {
+          ...editingProfile,
+          serverName: manualSni.trim() || undefined,
+          transportHost: manualTransportHost.trim() || undefined,
+          updatedAt: new Date().toISOString(),
+        };
+        await saveProfile(updatedProfile);
+        setIsAddModalOpen(false);
+        setEditingProfile(null);
         return;
       }
       if (isVpnConnected) {
@@ -495,24 +507,28 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                     <Star className="w-3.5 h-3.5 fill-current" />
                   </button>
 
-                  {!isCloudProfile(profile) && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (isVpnConnected) return;
-                        handleOpenEdit(profile);
-                      }}
-                      disabled={isVpnConnected}
-                      title={isVpnConnected ? 'Cannot edit server while VPN is connected' : 'Edit Server'}
-                      className={`p-1 transition-colors ${
-                        isVpnConnected
-                          ? 'text-neutral-700 cursor-not-allowed opacity-40'
-                          : 'text-neutral-600 hover:text-white cursor-pointer'
-                      }`}
-                    >
-                      <Pencil className="w-3.5 h-3.5" />
-                    </button>
-                  )}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (isVpnConnected && profile.id === connectionInfo.activeProfileId) return;
+                      handleOpenEdit(profile);
+                    }}
+                    disabled={isVpnConnected && profile.id === connectionInfo.activeProfileId}
+                    title={
+                      isVpnConnected && profile.id === connectionInfo.activeProfileId
+                        ? 'Cannot edit server while VPN is connected'
+                        : isCloudProfile(profile)
+                        ? 'Customize SNI & Host Header'
+                        : 'Edit Server'
+                    }
+                    className={`p-1 transition-colors ${
+                      isVpnConnected && profile.id === connectionInfo.activeProfileId
+                        ? 'text-neutral-700 cursor-not-allowed opacity-40'
+                        : 'text-neutral-600 hover:text-white cursor-pointer'
+                    }`}
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                  </button>
 
                   <button
                     onClick={(e) => {
@@ -558,7 +574,11 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
           <div className="w-full max-w-md bg-[#0d0d0d] border border-white/15 rounded-3xl p-5 shadow-2xl relative max-h-[92vh] flex flex-col">
             <div className="flex items-center justify-between pb-3 border-b border-white/10 shrink-0">
               <h3 className="text-sm font-bold text-white">
-                {editingProfile ? 'Edit Server' : 'Add Server'}
+                {editingProfile
+                  ? isCloudProfile(editingProfile)
+                    ? 'Edit Cloud Server (Host & SNI)'
+                    : 'Edit Server'
+                  : 'Add Server'}
               </h3>
               <button
                 onClick={() => {
@@ -623,6 +643,72 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                 >
                   {isImporting ? 'Importing...' : 'Save & Add'}
                 </button>
+              </div>
+            ) : editingProfile && isCloudProfile(editingProfile) ? (
+              <div className="flex-1 overflow-y-auto space-y-4 py-3 pr-1 text-xs">
+                <div className="flex items-start gap-2.5 p-3 bg-cyan-950/30 border border-cyan-500/30 rounded-xl text-xs text-cyan-200">
+                  <Cloud className="w-4 h-4 shrink-0 text-cyan-400 mt-0.5" />
+                  <div className="space-y-0.5">
+                    <div className="font-bold text-cyan-300">Cloud Node Configuration</div>
+                    <div className="text-[11px] text-cyan-200/80 leading-relaxed">
+                      Core node infrastructure is managed by cloud. You can customize the <strong>SNI</strong> and <strong>Host Header</strong> below for your ISP or bypass requirements.
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-black/60 border border-white/10 rounded-xl p-3 space-y-2">
+                  <div className="flex items-center justify-between text-neutral-400">
+                    <span className="text-[11px]">Server:</span>
+                    <span className="font-semibold text-white">{editingProfile.name}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-neutral-400">
+                    <span className="text-[11px]">Protocol:</span>
+                    <span className="font-mono uppercase font-bold text-neutral-200">{editingProfile.protocol}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-neutral-400">
+                    <span className="text-[11px]">Server Address:</span>
+                    <span className="font-mono text-neutral-500">Cloud Node • Protected</span>
+                  </div>
+                </div>
+
+                <div className="space-y-3 pt-1">
+                  <div>
+                    <label className="text-neutral-400 text-[10px] uppercase font-bold block mb-1">
+                      SNI (Server Name)
+                    </label>
+                    <input
+                      type="text"
+                      value={manualSni}
+                      onChange={(e) => setManualSni(e.target.value)}
+                      className="w-full bg-black border border-white/15 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-400 font-mono text-xs"
+                    />
+                    <span className="text-[10px] text-neutral-500 mt-1 block">
+                      TLS Server Name Indication (used for handshake validation)
+                    </span>
+                  </div>
+
+                  <div>
+                    <label className="text-neutral-400 text-[10px] uppercase font-bold block mb-1">
+                      Host (Host Header)
+                    </label>
+                    <input
+                      type="text"
+                      value={manualTransportHost}
+                      onChange={(e) => setManualTransportHost(e.target.value)}
+                      className="w-full bg-black border border-white/15 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-400 font-mono text-xs"
+                    />
+                    <span className="text-[10px] text-neutral-500 mt-1 block">
+                      HTTP/WebSocket/gRPC Host header sent through the transport
+                    </span>
+                  </div>
+                </div>
+
+                {importError && (
+                  <div className="flex items-center gap-1.5 text-xs text-red-400 bg-red-950/40 p-2.5 rounded-lg border border-red-900/40">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{importError}</span>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="flex-1 overflow-y-auto space-y-3 py-3 pr-1 text-xs">

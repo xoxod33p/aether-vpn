@@ -30,7 +30,13 @@ pub async fn save_profile(
             || existing.id.starts_with("cfg-")
             || existing.id.starts_with("sync-")
         {
-            return Err("Free cloud servers cannot be edited or modified.".to_string());
+            // For cloud servers, only allow modifying server_name (SNI) and transport_host (Host)
+            let mut cloud_profile = existing;
+            cloud_profile.server_name = profile.server_name;
+            cloud_profile.transport_host = profile.transport_host;
+            cloud_profile.updated_at = chrono::Utc::now().to_rfc3339();
+            db.save_profile(&cloud_profile).map_err(|e| e.to_string())?;
+            return Ok(cloud_profile);
         }
     }
     db.save_profile(&profile).map_err(|e| e.to_string())?;
