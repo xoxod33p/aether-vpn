@@ -96,6 +96,23 @@ pub async fn import_profile_link(link: String, db: State<'_, Database>) -> Resul
     }
 }
 
+#[tauri::command]
+pub async fn export_profile_link(id: String, db: State<'_, Database>) -> Result<String, String> {
+    let profile = db
+        .get_profile(&id)
+        .map_err(|e| e.to_string())?
+        .ok_or_else(|| format!("Profile not found: {}", id))?;
+
+    if profile.group_name.as_deref() == Some("Free Sync")
+        || profile.id.starts_with("cfg-")
+        || profile.id.starts_with("sync-")
+    {
+        return Err("Cloud configurations cannot be exported.".to_string());
+    }
+
+    SubscriptionParser::export_profile_link(&profile)
+}
+
 #[derive(serde::Deserialize)]
 struct CloudSyncResponse {
     servers: Option<Vec<serde_json::Value>>,

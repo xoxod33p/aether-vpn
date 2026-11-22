@@ -619,6 +619,157 @@ impl SubscriptionParser {
 
         Ok(profiles)
     }
+
+    pub fn export_profile_link(profile: &Profile) -> Result<String, String> {
+        let name_encoded = url::form_urlencoded::byte_serialize(profile.name.as_bytes()).collect::<String>();
+        match profile.protocol {
+            VpnProtocol::Vless => {
+                let uuid = profile.uuid.as_deref().unwrap_or_default();
+                if uuid.is_empty() {
+                    return Err("Missing UUID for VLESS configuration".to_string());
+                }
+                let mut params = Vec::new();
+                if profile.reality_public_key.is_some() {
+                    params.push("security=reality".to_string());
+                    if let Some(pbk) = &profile.reality_public_key {
+                        params.push(format!("pbk={}", url::form_urlencoded::byte_serialize(pbk.as_bytes()).collect::<String>()));
+                    }
+                    if let Some(sid) = &profile.reality_short_id {
+                        params.push(format!("sid={}", url::form_urlencoded::byte_serialize(sid.as_bytes()).collect::<String>()));
+                    }
+                } else if profile.tls_enabled.unwrap_or(false) {
+                    params.push("security=tls".to_string());
+                } else {
+                    params.push("security=none".to_string());
+                }
+
+                if let Some(sni) = &profile.server_name {
+                    if !sni.is_empty() {
+                        params.push(format!("sni={}", url::form_urlencoded::byte_serialize(sni.as_bytes()).collect::<String>()));
+                    }
+                }
+                if let Some(tt) = &profile.transport_type {
+                    params.push(format!("type={}", url::form_urlencoded::byte_serialize(tt.as_bytes()).collect::<String>()));
+                }
+                if let Some(host) = &profile.transport_host {
+                    if !host.is_empty() {
+                        params.push(format!("host={}", url::form_urlencoded::byte_serialize(host.as_bytes()).collect::<String>()));
+                    }
+                }
+                if let Some(path) = &profile.transport_path {
+                    if !path.is_empty() {
+                        params.push(format!("path={}", url::form_urlencoded::byte_serialize(path.as_bytes()).collect::<String>()));
+                    }
+                }
+                if let Some(flow) = &profile.flow {
+                    if !flow.is_empty() {
+                        params.push(format!("flow={}", url::form_urlencoded::byte_serialize(flow.as_bytes()).collect::<String>()));
+                    }
+                }
+                if let Some(fp) = &profile.fingerprint {
+                    if !fp.is_empty() {
+                        params.push(format!("fp={}", url::form_urlencoded::byte_serialize(fp.as_bytes()).collect::<String>()));
+                    }
+                }
+
+                let query = if params.is_empty() {
+                    String::new()
+                } else {
+                    format!("?{}", params.join("&"))
+                };
+                Ok(format!("vless://{}@{}:{}{}#{}", uuid, profile.server, profile.port, query, name_encoded))
+            }
+            VpnProtocol::Vmess => {
+                let uuid = profile.uuid.as_deref().unwrap_or_default();
+                if uuid.is_empty() {
+                    return Err("Missing UUID for VMess configuration".to_string());
+                }
+                let vmess_json = serde_json::json!({
+                    "v": "2",
+                    "ps": profile.name,
+                    "add": profile.server,
+                    "port": profile.port,
+                    "id": uuid,
+                    "aid": profile.alter_id.unwrap_or(0),
+                    "scy": profile.cipher.as_deref().unwrap_or("auto"),
+                    "net": profile.transport_type.as_deref().unwrap_or("tcp"),
+                    "type": "none",
+                    "host": profile.transport_host.as_deref().unwrap_or(""),
+                    "path": profile.transport_path.as_deref().unwrap_or(""),
+                    "tls": if profile.tls_enabled.unwrap_or(false) { "tls" } else { "" },
+                    "sni": profile.server_name.as_deref().unwrap_or("")
+                });
+                let encoded = base64::engine::general_purpose::STANDARD.encode(vmess_json.to_string());
+                Ok(format!("vmess://{}", encoded))
+            }
+            VpnProtocol::Trojan => {
+                let password = profile.password.as_deref().unwrap_or_default();
+                if password.is_empty() {
+                    return Err("Missing password for Trojan configuration".to_string());
+                }
+                let mut params = Vec::new();
+                if profile.tls_enabled.unwrap_or(true) {
+                    params.push("security=tls".to_string());
+                }
+                if let Some(sni) = &profile.server_name {
+                    if !sni.is_empty() {
+                        params.push(format!("sni={}", url::form_urlencoded::byte_serialize(sni.as_bytes()).collect::<String>()));
+                    }
+                }
+                if let Some(tt) = &profile.transport_type {
+                    params.push(format!("type={}", url::form_urlencoded::byte_serialize(tt.as_bytes()).collect::<String>()));
+                }
+                if let Some(host) = &profile.transport_host {
+                    if !host.is_empty() {
+                        params.push(format!("host={}", url::form_urlencoded::byte_serialize(host.as_bytes()).collect::<String>()));
+                    }
+                }
+                if let Some(path) = &profile.transport_path {
+                    if !path.is_empty() {
+                        params.push(format!("path={}", url::form_urlencoded::byte_serialize(path.as_bytes()).collect::<String>()));
+                    }
+                }
+                let query = if params.is_empty() {
+                    String::new()
+                } else {
+                    format!("?{}", params.join("&"))
+                };
+                Ok(format!("trojan://{}@{}:{}{}#{}", password, profile.server, profile.port, query, name_encoded))
+            }
+            VpnProtocol::Shadowsocks => {
+                let method = profile.cipher.as_deref().unwrap_or("chacha20-ietf-poly1305");
+                let password = profile.password.as_deref().unwrap_or_default();
+                let user_info = format!("{}:{}", method, password);
+                let encoded_user_info = base64::engine::general_purpose::STANDARD.encode(user_info);
+                Ok(format!("ss://{}@{}:{}#{}", encoded_user_info, profile.server, profile.port, name_encoded))
+            }
+            VpnProtocol::Hysteria2 => {
+                let password = profile.password.as_deref().unwrap_or_default();
+                let mut params = Vec::new();
+                if let Some(sni) = &profile.server_name {
+                    if !sni.is_empty() {
+                        params.push(format!("sni={}", url::form_urlencoded::byte_serialize(sni.as_bytes()).collect::<String>()));
+                    }
+                }
+                params.push("insecure=0".to_string());
+                let query = format!("?{}", params.join("&"));
+                Ok(format!("hysteria2://{}@{}:{}{}#{}", password, profile.server, profile.port, query, name_encoded))
+            }
+            VpnProtocol::Wireguard => {
+                let json_data = serde_json::to_string_pretty(&profile).map_err(|e| e.to_string())?;
+                Ok(json_data)
+            }
+            VpnProtocol::Socks5 => {
+                let user_info = if let Some(user) = &profile.username {
+                    let pass = profile.password.as_deref().unwrap_or_default();
+                    format!("{}:{}@", user, pass)
+                } else {
+                    String::new()
+                };
+                Ok(format!("socks5://{}{}:{}#{}", user_info, profile.server, profile.port, name_encoded))
+            }
+        }
+    }
 }
 
 fn urlencoding_decode(val: &str) -> String {

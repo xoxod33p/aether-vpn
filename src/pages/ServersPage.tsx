@@ -17,6 +17,8 @@ import {
   Shield,
   Network,
   Cloud,
+  Share2,
+  Copy,
 } from 'lucide-react';
 import { Profile, VpnProtocol } from '../types';
 import { VpnStoreType } from '../stores/useVpnStore';
@@ -35,6 +37,7 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
     deleteProfile,
     saveProfile,
     importProfileLink,
+    exportProfileLink,
     syncCloudServers,
     testProfileLatency,
     setActiveTab,
@@ -53,6 +56,25 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
   const [isTestingAll, setIsTestingAll] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncStatus, setSyncStatus] = useState<string | null>(null);
+  const [exportedModalData, setExportedModalData] = useState<{ name: string; link: string; copied: boolean } | null>(null);
+  const [exportSuccessMessage, setExportSuccessMessage] = useState<string | null>(null);
+
+  const handleExportProfile = async (profile: Profile) => {
+    if (isCloudProfile(profile)) {
+      return;
+    }
+    try {
+      const link = await exportProfileLink(profile.id);
+      try {
+        await navigator.clipboard.writeText(link);
+      } catch (_) {}
+      setExportedModalData({ name: profile.name, link, copied: true });
+      setExportSuccessMessage(`Copied link for "${profile.name}" to clipboard`);
+      setTimeout(() => setExportSuccessMessage(null), 3500);
+    } catch (err: any) {
+      setImportError(err?.message || 'Failed to export configuration');
+    }
+  };
 
   const handleSyncFreeServers = async () => {
     setIsSyncing(true);
@@ -409,6 +431,13 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
         )}
       </div>
 
+      {exportSuccessMessage && (
+        <div className="flex items-center gap-2 p-2.5 mb-2 bg-emerald-950/40 border border-emerald-500/30 rounded-xl text-xs text-emerald-300 shrink-0">
+          <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+          <span>{exportSuccessMessage}</span>
+        </div>
+      )}
+
       <div className="flex-1 overflow-y-auto space-y-2 pr-0.5">
         {filteredProfiles.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center text-neutral-400">
@@ -529,6 +558,19 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                   >
                     <Pencil className="w-3.5 h-3.5" />
                   </button>
+
+                  {!isCloudProfile(profile) && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleExportProfile(profile);
+                      }}
+                      title="Export Configuration / Copy Share Link"
+                      className="p-1 text-neutral-600 hover:text-white cursor-pointer transition-colors"
+                    >
+                      <Share2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
 
                   <button
                     onClick={(e) => {
@@ -1233,6 +1275,68 @@ export const ServersPage: React.FC<ServersPageProps> = ({ store }) => {
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {exportedModalData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="w-full max-w-md bg-[#0d0d0d] border border-white/15 rounded-3xl p-5 shadow-2xl relative flex flex-col space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-white/10 shrink-0">
+              <div className="flex items-center gap-2">
+                <Share2 className="w-4 h-4 text-white" />
+                <h3 className="text-sm font-bold text-white">Export Configuration</h3>
+              </div>
+              <button
+                onClick={() => setExportedModalData(null)}
+                className="text-neutral-500 hover:text-white p-1 rounded-lg transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div>
+              <div className="text-xs font-semibold text-neutral-300 mb-1">{exportedModalData.name}</div>
+              <p className="text-[11px] text-neutral-400 mb-2">
+                Share link generated. You can copy this link and import it into any VPN client:
+              </p>
+              <textarea
+                readOnly
+                value={exportedModalData.link}
+                rows={4}
+                className="w-full bg-black border border-white/10 rounded-xl p-3 text-xs text-neutral-200 font-mono focus:outline-none focus:border-white/30 resize-none select-all break-all"
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-white/10">
+              <button
+                onClick={() => setExportedModalData(null)}
+                className="px-3.5 py-1.5 rounded-xl bg-[#161616] hover:bg-[#222] border border-white/10 text-neutral-300 text-xs font-semibold cursor-pointer"
+              >
+                Close
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(exportedModalData.link);
+                    setExportedModalData({ ...exportedModalData, copied: true });
+                  } catch (_) {}
+                }}
+                className="px-4 py-1.5 rounded-xl bg-white hover:bg-neutral-200 text-black text-xs font-bold cursor-pointer shadow-md flex items-center gap-1.5"
+              >
+                {exportedModalData.copied ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-black" />
+                    <span>Copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3.5 h-3.5 text-black" />
+                    <span>Copy Link</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -13,6 +13,7 @@ import {
   OperatingMode,
 } from '../types';
 import { vpnApi, isTauri } from '../services/tauriApi';
+import { isCloudProfile } from '../utils/formatters';
 
 const DEFAULT_SETTINGS: AppSettings = {
   theme: 'dark',
@@ -459,6 +460,22 @@ export function useVpnStore() {
     }
   }, [addLog]);
 
+  const exportProfileLink = useCallback(async (id: string): Promise<string> => {
+    const profile = profiles.find((p) => p.id === id);
+    if (!profile) throw new Error('Configuration not found.');
+    if (isCloudProfile(profile)) {
+      throw new Error('Cloud configurations cannot be exported.');
+    }
+    try {
+      const link = await vpnApi.exportProfileLink(id);
+      addLog('info', `Exported configuration link: ${profile.name}`);
+      return link;
+    } catch (e: any) {
+      addLog('error', `Failed to export configuration: ${e.message}`);
+      throw e;
+    }
+  }, [profiles, addLog]);
+
   const updateOperatingMode = useCallback((mode: OperatingMode) => {
     setSettings((prev) => {
       const next = { ...prev, defaultMode: mode };
@@ -586,6 +603,7 @@ export function useVpnStore() {
     deleteProfile,
     saveProfile,
     importProfileLink,
+    exportProfileLink,
     syncCloudServers,
     updateOperatingMode,
     toggleKillSwitch,

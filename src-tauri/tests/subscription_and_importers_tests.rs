@@ -118,3 +118,20 @@ fn test_parse_singbox_json_subscription() {
     assert_eq!(profiles[0].port, 443);
     assert_eq!(profiles[0].country_code.as_deref(), Some("SG"));
 }
+
+#[test]
+fn test_export_profile_link_roundtrip() {
+    let original_link = "vless://7c40d70b-520e-4ea7-9a91-4cf1e27e8d24@frankfurt.node.vpn:443?security=reality&pbk=pubkey123&sid=1234&sni=de.vpn.com&type=ws&host=cdn.de.vpn.com&path=%2Fvless-ws#%5BDE%5D%20Frankfurt%20Ultra";
+    let profile = SubscriptionParser::parse_vless_link(original_link, "manual")
+        .expect("Failed to parse VLESS share link");
+
+    let exported = SubscriptionParser::export_profile_link(&profile)
+        .expect("Failed to export VLESS share link");
+
+    assert!(exported.starts_with("vless://7c40d70b-520e-4ea7-9a91-4cf1e27e8d24@frankfurt.node.vpn:443?"));
+    assert!(exported.contains("security=reality"));
+    assert!(exported.contains("pbk=pubkey123"));
+    assert!(exported.contains("sid=1234"));
+    assert!(exported.contains("sni=de.vpn.com"));
+    assert!(exported.contains("type=ws"));
+}

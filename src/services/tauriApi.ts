@@ -114,6 +114,10 @@ export const vpnApi = {
     return safeInvoke<Profile>('import_profile_link', { link });
   },
 
+  exportProfileLink: async (id: string): Promise<string> => {
+    return safeInvoke<string>('export_profile_link', { id });
+  },
+
   syncCloudServers: async (apiUrl?: string, apiKey?: string): Promise<Profile[]> => {
     return safeInvoke<Profile[]>('sync_cloud_servers', { apiUrl, apiKey }, []);
   },
